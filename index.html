@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Neon Survivors - 2D Roguelite</title>
     <!-- Tailwind CSS for elegant modern responsive panels -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,25 +18,27 @@
             color: #f3f4f6;
             overflow: hidden;
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
         .pixel-font {
             font-family: 'Press Start 2P', monospace;
         }
         /* Custom scrollbar for Shop and Leaderboard */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         ::-webkit-scrollbar-track {
             background: rgba(15, 23, 42, 0.6);
         }
         ::-webkit-scrollbar-thumb {
             background: #3b82f6;
-            border-radius: 3px;
+            border-radius: 2px;
         }
         /* Glistening neon animation */
         @keyframes neonGlow {
-            0%, 100% { filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 10px #3b82f6); }
-            50% { filter: drop-shadow(0 0 8px #60a5fa) drop-shadow(0 0 18px #60a5fa); }
+            0%, 100% { filter: drop-shadow(0 0 3px #3b82f6) drop-shadow(0 0 8px #3b82f6); }
+            50% { filter: drop-shadow(0 0 6px #60a5fa) drop-shadow(0 0 14px #60a5fa); }
         }
         .neon-glow {
             animation: neonGlow 3s infinite;
@@ -47,25 +49,30 @@
         }
         @keyframes shake {
             0%, 100% { transform: translate(0, 0); }
-            20% { transform: translate(-6px, 6px); }
-            40% { transform: translate(6px, -6px); }
-            60% { transform: translate(-6px, -6px); }
-            80% { transform: translate(6px, 6px); }
+            20% { transform: translate(-4px, 4px); }
+            40% { transform: translate(4px, -4px); }
+            60% { transform: translate(-4px, -4px); }
+            80% { transform: translate(4px, 4px); }
         }
-        /* Scanlines Overlay option */
+        /* Scanlines CRT effect */
         .scanlines::before {
             content: " ";
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
             z-index: 2;
-            background-size: 100% 4px, 6px 100%;
+            background-size: 100% 3px;
             pointer-events: none;
+        }
+        /* Prevent elastic scrolling and default touch interactions on mobile browser */
+        canvas {
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
-<body class="relative w-screen h-screen flex items-center justify-center">
+<body class="relative w-screen h-screen flex items-center justify-center select-none overflow-hidden">
 
     <!-- Main Game Wrapper -->
     <div id="game-container" class="relative w-full h-full flex items-center justify-center overflow-hidden scanlines">
@@ -74,146 +81,147 @@
         <canvas id="gameCanvas" class="absolute inset-0 block w-full h-full"></canvas>
 
         <!-- ================= HUD Overlay ================= -->
-        <div id="hud" class="absolute top-0 left-0 w-full p-4 pointer-events-none flex flex-col gap-2 z-10 hidden">
+        <div id="hud" class="absolute top-0 left-0 w-full p-2 md:p-4 pointer-events-none flex flex-col gap-1.5 z-10 hidden">
             <!-- XP Progress Bar (Top) -->
-            <div class="w-full flex items-center gap-3">
-                <span class="pixel-font text-xs text-blue-400">LV.<span id="hud-level">1</span></span>
-                <div class="flex-1 h-3 bg-slate-900/80 rounded-full overflow-hidden border border-slate-700/50 backdrop-blur-sm p-[2px]">
-                    <div id="hud-xp-bar" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-100 shadow-[0_0_8px_rgba(59,130,246,0.6)]" style="width: 0%"></div>
+            <div class="w-full flex items-center gap-2">
+                <span class="pixel-font text-[9px] md:text-xs text-blue-400">LV.<span id="hud-level">1</span></span>
+                <div class="flex-1 h-2.5 bg-slate-900/80 rounded-full overflow-hidden border border-slate-700/50 backdrop-blur-sm p-[2px]">
+                    <div id="hud-xp-bar" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-100" style="width: 0%"></div>
                 </div>
-                <span class="text-xs text-slate-400 whitespace-nowrap"><span id="hud-xp-num">0</span>/<span id="hud-xp-max">100</span> XP</span>
+                <span class="text-[9px] md:text-xs text-slate-400 whitespace-nowrap"><span id="hud-xp-num">0</span>/<span id="hud-xp-max">100</span> XP</span>
             </div>
 
             <!-- Stats Bar -->
-            <div class="flex justify-between items-center mt-1">
+            <div class="flex justify-between items-center mt-0.5">
                 <!-- Health Bar (Left) -->
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-heart text-red-500 text-lg animate-pulse"></i>
-                    <div class="w-48 h-4 bg-slate-900/80 rounded border border-slate-700/50 overflow-hidden flex items-center justify-center relative p-[1px]">
+                <div class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-heart text-red-500 text-sm md:text-lg animate-pulse"></i>
+                    <div class="w-32 md:w-48 h-3.5 bg-slate-900/80 rounded border border-slate-700/50 overflow-hidden flex items-center justify-center relative p-[1px]">
                         <div id="hud-hp-bar" class="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-orange-500 transition-all duration-150" style="width: 100%"></div>
-                        <span id="hud-hp-text" class="absolute z-10 text-[10px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">100 / 100</span>
+                        <span id="hud-hp-text" class="absolute z-10 text-[9px] md:text-[10px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">100 / 100</span>
                     </div>
                 </div>
 
                 <!-- Wave Timer & Status (Center) -->
                 <div class="flex flex-col items-center">
-                    <div class="px-4 py-1.5 bg-slate-900/95 border border-blue-500/30 rounded-full backdrop-blur-md flex items-center gap-3 shadow-lg pointer-events-auto">
-                        <span class="pixel-font text-sm text-yellow-400 animate-pulse" id="hud-wave-label">WAVE 1</span>
-                        <div class="w-[1px] h-4 bg-slate-700"></div>
-                        <span class="pixel-font text-lg text-white font-mono" id="hud-timer">60s</span>
-                        <button id="btn-pause-game" class="text-slate-400 hover:text-white ml-2 focus:outline-none" title="Pause Game">
-                            <i class="fa-solid fa-pause"></i>
+                    <div class="px-2.5 py-1 bg-slate-900/95 border border-blue-500/30 rounded-full backdrop-blur-md flex items-center gap-2 shadow-lg pointer-events-auto">
+                        <span class="pixel-font text-[9px] md:text-sm text-yellow-400 animate-pulse" id="hud-wave-label">WAVE 1</span>
+                        <div class="w-[1px] h-3 bg-slate-700"></div>
+                        <span class="pixel-font text-xs md:text-lg text-white font-mono" id="hud-timer">60s</span>
+                        <button id="btn-pause-game" class="text-slate-400 hover:text-white ml-1 focus:outline-none" title="Pause Game">
+                            <i class="fa-solid fa-pause text-xs"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- Currency & Scores (Right) -->
-                <div class="flex items-center gap-4 text-sm">
-                    <div class="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-md">
-                        <i class="fa-solid fa-coins text-amber-400 animate-bounce"></i>
-                        <span class="font-bold text-amber-300 font-mono" id="hud-gold">0</span>
+                <div class="flex items-center gap-1.5 md:gap-4 text-xs">
+                    <div class="flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 rounded">
+                        <i class="fa-solid fa-coins text-amber-400 text-[10px] md:text-xs"></i>
+                        <span class="font-bold text-amber-300 font-mono text-[10px] md:text-xs" id="hud-gold">0</span>
                     </div>
-                    <div class="flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 border border-rose-500/30 rounded-md">
-                        <i class="fa-solid fa-skull text-rose-400"></i>
-                        <span class="font-bold text-rose-300 font-mono" id="hud-kills">0</span>
+                    <div class="flex items-center gap-1 px-2 py-0.5 bg-rose-500/10 border border-rose-500/30 rounded">
+                        <i class="fa-solid fa-skull text-rose-400 text-[10px] md:text-xs"></i>
+                        <span class="font-bold text-rose-300 font-mono text-[10px] md:text-xs" id="hud-kills">0</span>
                     </div>
-                    <div class="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-md">
-                        <i class="fa-solid fa-crown text-emerald-400 animate-pulse"></i>
-                        <span class="font-bold text-emerald-300 font-mono" id="hud-score">0</span>
+                    <div class="hidden sm:flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded">
+                        <i class="fa-solid fa-crown text-emerald-400 text-xs"></i>
+                        <span class="font-bold text-emerald-300 font-mono text-xs" id="hud-score">0</span>
                     </div>
                 </div>
             </div>
 
             <!-- Boss Warning Message -->
-            <div id="boss-alert-banner" class="hidden self-center px-6 py-2 bg-rose-950/90 border border-rose-500 rounded-lg text-rose-200 pixel-font text-[10px] animate-pulse tracking-wide shadow-xl shadow-rose-950/50 mt-1">
-                ⚠️ DETECTED HIGH MASS ANOMALY: WAVE BOSS APPROACHING! ⚠️
+            <div id="boss-alert-banner" class="hidden self-center px-4 py-1.5 bg-rose-950/90 border border-rose-500 rounded-lg text-rose-200 pixel-font text-[8px] md:text-[10px] animate-pulse tracking-wide shadow-xl shadow-rose-950/50 mt-1">
+                ⚠️ WAVE BOSS INCOMING! ⚠️
             </div>
 
             <!-- Boss Active Health Bar -->
-            <div id="boss-hud-health" class="hidden w-2/3 self-center flex flex-col gap-1 items-center mt-2 bg-slate-950/80 border border-red-500/30 p-2 rounded-lg backdrop-blur-sm shadow-xl">
-                <div class="flex justify-between w-full text-[10px] pixel-font text-red-400">
+            <div id="boss-hud-health" class="hidden w-2/3 md:w-1/2 self-center flex flex-col gap-1 items-center mt-1.5 bg-slate-950/80 border border-red-500/30 p-1.5 rounded-lg backdrop-blur-sm shadow-xl">
+                <div class="flex justify-between w-full text-[8px] md:text-[10px] pixel-font text-red-400">
                     <span id="boss-name-hud">BOSS RAVAGER</span>
                     <span id="boss-pct-hud">100%</span>
                 </div>
-                <div class="w-full h-3 bg-slate-900 border border-slate-800 rounded p-[1px] overflow-hidden">
-                    <div id="boss-hp-inner" class="h-full bg-gradient-to-r from-red-600 to-rose-400 rounded transition-all duration-75 shadow-[0_0_8px_#f43f5e]" style="width: 100%"></div>
+                <div class="w-full h-2 bg-slate-900 border border-slate-800 rounded p-[1px] overflow-hidden">
+                    <div id="boss-hp-inner" class="h-full bg-gradient-to-r from-red-600 to-rose-400 rounded transition-all duration-75" style="width: 100%"></div>
                 </div>
             </div>
 
             <!-- Dash Charge Indicators & Cooldown Tracker -->
-            <div class="flex items-center gap-2 self-start mt-1 bg-slate-900/60 p-1.5 px-3 border border-slate-800 rounded-md">
-                <i class="fa-solid fa-wind text-cyan-400"></i>
-                <span class="text-xs text-slate-300 font-bold uppercase tracking-widest">DASH</span>
-                <div id="hud-dash-slots" class="flex gap-1.5 ml-2">
-                    <!-- Dynamic slots inside JS -->
+            <div class="flex items-center gap-1.5 self-start mt-0.5 bg-slate-900/60 p-1 px-2 border border-slate-800 rounded-md">
+                <i class="fa-solid fa-wind text-cyan-400 text-[10px]"></i>
+                <span class="text-[9px] text-slate-300 font-bold uppercase tracking-wider">DASH</span>
+                <div id="hud-dash-slots" class="flex gap-1 ml-1">
+                    <!-- Javascript ke andar dynamic slots -->
                 </div>
             </div>
         </div>
 
-        <!-- Touch Controls (Mobile Joystick) -->
-        <div id="joystick-zone" class="absolute bottom-10 left-10 w-32 h-32 bg-white/5 rounded-full border border-white/10 flex items-center justify-center pointer-events-auto touch-none z-10 hidden">
-            <div id="joystick-knob" class="w-12 h-12 bg-blue-500/50 rounded-full border border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-transform duration-75"></div>
+        <!-- Touch Controls (Responsive Mobile Floating Joystick) -->
+        <div id="joystick-zone" class="absolute bottom-8 left-8 w-24 h-24 md:w-32 md:h-32 bg-slate-900/40 rounded-full border border-white/10 flex items-center justify-center pointer-events-auto touch-none z-10 hidden">
+            <div id="joystick-knob" class="w-10 h-10 md:w-12 md:h-12 bg-blue-500/40 rounded-full border border-blue-400 transition-transform duration-75"></div>
         </div>
 
-        <!-- Dedicated Touch Dash Button for Mobile -->
-        <button id="touch-dash-btn" class="absolute bottom-12 right-28 w-16 h-16 rounded-full bg-cyan-600/30 border border-cyan-400/50 flex items-center justify-center text-cyan-300 active:scale-95 shadow-lg shadow-cyan-950/50 transition-all z-10 hidden">
-            <i class="fa-solid fa-wind text-2xl"></i>
+        <!-- Dedicated Responsive Touch Dash Button for Mobile -->
+        <button id="touch-dash-btn" class="absolute bottom-8 right-8 w-16 h-16 md:w-20 md:h-20 rounded-full bg-cyan-600/25 border-2 border-cyan-400/40 flex flex-col items-center justify-center text-cyan-300 active:bg-cyan-500/40 active:scale-95 shadow-lg shadow-cyan-950/30 transition-all z-10 hidden">
+            <i class="fa-solid fa-wind text-xl md:text-2xl"></i>
+            <span class="text-[8px] font-bold mt-1 tracking-widest uppercase">DASH</span>
         </button>
 
-        <!-- Toggle Music / CRT Controls -->
-        <div class="absolute bottom-4 right-4 flex gap-2 z-20">
-            <button id="btn-crt-effect" class="w-10 h-10 rounded-full bg-slate-900/80 border border-slate-700 flex items-center justify-center text-blue-500 hover:text-white hover:border-blue-500 transition-all shadow-lg" title="Toggle CRT Overlay">
-                <i class="fa-solid fa-tv"></i>
+        <!-- Toggle Audio & CRT Settings Controls -->
+        <div class="absolute bottom-3 right-28 md:right-4 flex gap-1.5 z-20">
+            <button id="btn-crt-effect" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-900/85 border border-slate-700 flex items-center justify-center text-blue-500 hover:text-white transition-all shadow-md" title="Toggle CRT Filter">
+                <i class="fa-solid fa-tv text-xs md:text-sm"></i>
             </button>
-            <button id="btn-audio-synth" class="w-10 h-10 rounded-full bg-slate-900/80 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-blue-500 transition-all shadow-lg" title="Mute/Unmute Synth Ambience">
-                <i class="fa-solid fa-music"></i>
+            <button id="btn-audio-synth" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-900/85 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-md" title="Mute Ambient Synth">
+                <i class="fa-solid fa-music text-xs md:text-sm"></i>
             </button>
-            <button id="btn-sound-effects" class="w-10 h-10 rounded-full bg-slate-900/80 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-blue-500 transition-all shadow-lg" title="Mute/Unmute Game Sound Effects">
-                <i class="fa-solid fa-volume-high"></i>
+            <button id="btn-sound-effects" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-900/85 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-md" title="Mute SFX">
+                <i class="fa-solid fa-volume-high text-xs md:text-sm"></i>
             </button>
         </div>
 
         <!-- ================= START SCREEN ================= -->
-        <div id="start-screen" class="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center p-6 z-30 transition-all duration-300">
-            <div class="max-w-2xl w-full text-center space-y-6">
-                <h1 class="pixel-font text-3xl md:text-5xl bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-500 bg-clip-text text-transparent neon-glow leading-normal tracking-wide py-2">
+        <div id="start-screen" class="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center p-4 z-30 transition-all duration-300 overflow-y-auto">
+            <div class="max-w-xl w-full text-center space-y-4 md:space-y-6">
+                <h1 class="pixel-font text-2xl md:text-4xl bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-500 bg-clip-text text-transparent neon-glow leading-normal tracking-wide py-1">
                     NEON SURVIVORS
                 </h1>
-                <p class="text-slate-400 text-sm md:text-base max-w-lg mx-auto leading-relaxed">
-                    A challenging 2D infinite survivors roguelite game featuring live procedural wave-shifting backgrounds, simplified upgrades, and complex weaponry!
+                <p class="text-slate-400 text-xs md:text-sm max-w-md mx-auto leading-relaxed">
+                    A mobile-optimized 2D roguelite survivors game. Supports touch virtual joystick, real-time wave-shifting dynamic backgrounds, and automatic firing tracking!
                 </p>
 
-                <!-- Action Blocks -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-xl mx-auto mt-4">
-                    <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl">
-                        <h3 class="font-bold text-blue-400 mb-2 flex items-center gap-2">
-                            <i class="fa-solid fa-keyboard"></i> Controls & Movement
+                <!-- Action Controls Block -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-left max-w-md mx-auto">
+                    <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-lg">
+                        <h3 class="font-bold text-xs text-blue-400 mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-keyboard"></i> Desktop Controls
                         </h3>
-                        <ul class="text-xs text-slate-300 space-y-1.5">
-                            <li>• Use <span class="text-blue-300 font-bold">WASD</span> or <span class="text-blue-300 font-bold">Arrow Keys</span> to move</li>
-                            <li>• Press <span class="text-cyan-400 font-bold">Spacebar</span> to dash with invincibility!</li>
-                            <li>• Automatic fire at targets within your dynamic range</li>
-                        </ul>
+                        <p class="text-[10px] text-slate-300">
+                            Move: <span class="text-blue-300 font-bold">WASD/Arrows</span><br>
+                            Dash: <span class="text-cyan-400 font-bold">Spacebar</span> (Invincible)
+                        </p>
                     </div>
-                    <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl">
-                        <h3 class="font-bold text-amber-400 mb-2 flex items-center gap-2">
-                            <i class="fa-solid fa-star"></i> Pro Survival Tips
+                    <div class="bg-slate-900/80 border border-slate-800 p-3 rounded-lg">
+                        <h3 class="font-bold text-xs text-cyan-400 mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-mobile-screen"></i> Mobile Controls
                         </h3>
-                        <p class="text-xs text-slate-300 leading-relaxed">
-                            Collect purple Crystal Gems to Level Up and gold Coins to buy game-changing buffs in the Shop! Watch out for boss threats.
+                        <p class="text-[10px] text-slate-300">
+                            Left side: Drag for <span class="text-cyan-300 font-bold">Joystick</span><br>
+                            Right side: Tap <span class="text-cyan-300 font-bold">Dash Button</span>
                         </p>
                     </div>
                 </div>
 
                 <!-- High Score Dashboard -->
-                <div class="bg-indigo-950/30 border border-indigo-500/20 p-3 rounded-lg max-w-xs mx-auto text-center">
-                    <span class="text-xs text-indigo-300 uppercase tracking-widest block mb-1">Your All-Time Best</span>
-                    <span class="pixel-font text-lg text-indigo-400" id="menu-high-score">0</span>
+                <div class="bg-indigo-950/30 border border-indigo-500/20 p-2 rounded-lg max-w-xs mx-auto text-center">
+                    <span class="text-[9px] text-indigo-300 uppercase tracking-widest block mb-0.5">Your All-Time Best</span>
+                    <span class="pixel-font text-sm text-indigo-400" id="menu-high-score">0</span>
                 </div>
 
                 <!-- Start Action Button -->
                 <div>
-                    <button id="btn-start" class="pixel-font bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm py-4 px-10 rounded-xl shadow-lg border border-blue-400/20 transform hover:-translate-y-1 transition-all duration-200">
+                    <button id="btn-start" class="pixel-font bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs py-3.5 px-8 rounded-lg shadow-lg border border-blue-400/20 transform hover:-translate-y-0.5 transition-all">
                         START SURVIVAL
                     </button>
                 </div>
@@ -221,48 +229,48 @@
         </div>
 
         <!-- ================= SHOP BETWEEN WAVES ================= -->
-        <div id="shop-screen" class="absolute inset-0 bg-slate-950/95 flex items-center justify-center p-4 md:p-8 z-20 hidden">
-            <div class="max-w-4xl w-full bg-slate-900/90 border border-blue-500/30 rounded-2xl shadow-2xl p-6 flex flex-col max-h-[90vh]">
+        <div id="shop-screen" class="absolute inset-0 bg-slate-950/95 flex items-center justify-center p-2 md:p-6 z-20 hidden">
+            <div class="max-w-4xl w-full bg-slate-900/90 border border-blue-500/30 rounded-xl shadow-2xl p-4 md:p-6 flex flex-col max-h-[96vh] md:max-h-[90vh]">
                 
                 <!-- Shop Header -->
-                <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3 shrink-0">
                     <div>
-                        <h2 class="pixel-font text-xl text-yellow-400 flex items-center gap-2">
-                            <i class="fa-solid fa-cart-shopping animate-bounce"></i> SYSTEM UPGRADE TERMINAL
+                        <h2 class="pixel-font text-xs md:text-lg text-yellow-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-cart-shopping"></i> UPGRADE TERMINAL
                         </h2>
-                        <p class="text-slate-400 text-xs mt-1">Enhance your ship's parameters before the next incoming wave begins.</p>
+                        <p class="text-slate-400 text-[10px] mt-0.5">Enhance your ship's core attributes before the next wave starts.</p>
                     </div>
-                    <div class="flex items-center gap-3 bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-lg shadow-lg">
-                        <i class="fa-solid fa-coins text-amber-400 text-lg"></i>
-                        <span class="pixel-font text-md text-amber-300" id="shop-wallet">0</span>
+                    <div class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-lg shadow-lg">
+                        <i class="fa-solid fa-coins text-amber-400 text-sm"></i>
+                        <span class="pixel-font text-xs text-amber-300" id="shop-wallet">0</span>
                     </div>
                 </div>
 
                 <!-- Grid Layout: Upgrades / Stats -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-y-auto pr-2 mb-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-y-auto pr-1 mb-3 flex-1 min-h-0">
                     <!-- Shop Items Grid (Left 2 Columns) -->
-                    <div class="lg:col-span-2 space-y-3">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Available Upgrades</h3>
-                        <div id="shop-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="lg:col-span-2 space-y-2">
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Available System Modifications</h3>
+                        <div id="shop-items-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <!-- Shop items generated dynamically in JavaScript -->
                         </div>
                     </div>
 
                     <!-- Weapon Unlocks & Stats Pane (Right 1 Column) -->
-                    <div class="bg-slate-955/80 rounded-xl border border-slate-800 p-4 space-y-4 shadow-inner">
-                        <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
-                            <i class="fa-solid fa-chart-simple"></i> Ship Core Status
+                    <div class="bg-slate-955/80 rounded-lg border border-slate-800 p-3 space-y-3 shadow-inner">
+                        <h3 class="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
+                            <i class="fa-solid fa-chart-simple"></i> Core Attributes
                         </h3>
                         
                         <!-- Core stats listing -->
-                        <div class="space-y-2 text-xs text-slate-300" id="shop-stats-list">
+                        <div class="space-y-1.5 text-[11px] text-slate-300" id="shop-stats-list">
                             <!-- Stats elements injected by JS -->
                         </div>
 
                         <!-- Passive weapon list showing evolution steps -->
-                        <div class="pt-4 border-t border-slate-800/80 space-y-2">
-                            <h4 class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Weapon Evolution & Levels</h4>
-                            <div id="shop-weapon-visualizers" class="grid grid-cols-2 gap-2">
+                        <div class="pt-2.5 border-t border-slate-800/80 space-y-1.5">
+                            <h4 class="text-[9px] font-bold text-indigo-400 uppercase tracking-wider">Weapon Modifications</h4>
+                            <div id="shop-weapon-visualizers" class="grid grid-cols-2 gap-1.5">
                                 <!-- Weapon visual bars showing dynamic evolution steps -->
                             </div>
                         </div>
@@ -270,12 +278,12 @@
                 </div>
 
                 <!-- Footer Actions -->
-                <div class="flex items-center justify-between border-t border-slate-800 pt-4 mt-auto">
-                    <div class="text-xs text-slate-400">
-                        Wave difficulty will increase by <span class="text-rose-400 font-bold">20%</span> and enemy sizes grow by <span class="text-rose-400 font-bold">5%</span>.
+                <div class="flex items-center justify-between border-t border-slate-800 pt-3 shrink-0 mt-auto">
+                    <div class="text-[10px] text-slate-400 max-w-[60%] leading-tight">
+                        Next wave difficulty increases by <span class="text-rose-400 font-bold">20%</span> and enemy sizes grow by <span class="text-rose-400 font-bold">5%</span> (capped at max 2x).
                     </div>
-                    <button id="btn-next-wave" class="pixel-font bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs py-3.5 px-8 rounded-lg shadow-lg border border-emerald-400/20 transition-all transform hover:-translate-y-[2px]">
-                        LAUNCH NEXT WAVE <i class="fa-solid fa-chevron-right ml-1"></i>
+                    <button id="btn-next-wave" class="pixel-font bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[9px] md:text-xs py-2.5 px-5 rounded shadow-lg border border-emerald-400/20 transition-all">
+                        LAUNCH WAVE <i class="fa-solid fa-chevron-right ml-0.5"></i>
                     </button>
                 </div>
             </div>
@@ -283,69 +291,69 @@
 
         <!-- ================= WAVE CLEAR MODAL ================= -->
         <div id="wave-clear-screen" class="absolute inset-0 bg-slate-950/90 flex items-center justify-center p-4 z-20 hidden">
-            <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl">
-                <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                    <i class="fa-solid fa-circle-check text-emerald-400 text-3xl animate-bounce"></i>
+            <div class="bg-slate-900 border border-emerald-500/30 rounded-xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+                <div class="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-2xl animate-bounce"></i>
                 </div>
                 <div>
-                    <h2 class="pixel-font text-lg text-emerald-400">WAVE SURVIVED!</h2>
-                    <p class="text-slate-400 text-xs mt-1">Excellent maneuvers. System stabilized.</p>
+                    <h2 class="pixel-font text-xs md:text-sm text-emerald-400">WAVE SURVIVED!</h2>
+                    <p class="text-slate-400 text-[10px] mt-0.5">Maneuvers successful. Reactor integrity stabilized.</p>
                 </div>
 
-                <div class="bg-slate-950/80 rounded-xl p-4 border border-slate-800/80 space-y-3 text-left">
-                    <div class="flex justify-between items-center text-sm">
+                <div class="bg-slate-950/80 rounded-lg p-3.5 border border-slate-800/80 space-y-2 text-left text-xs">
+                    <div class="flex justify-between items-center">
                         <span class="text-slate-400">Enemies Destroyed:</span>
                         <span class="font-bold text-rose-300 font-mono" id="clear-kills">0</span>
                     </div>
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-slate-400">Wave Score Multiplier:</span>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Survival Score:</span>
                         <span class="font-bold text-yellow-300 font-mono" id="clear-score">0</span>
                     </div>
                     <div class="h-[1px] bg-slate-800"></div>
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-emerald-400 font-semibold">Wave Bonus Gold:</span>
-                        <span class="pixel-font text-xs text-amber-300 font-mono" id="clear-bonus">+0</span>
+                    <div class="flex justify-between items-center">
+                        <span class="text-emerald-400 font-semibold">Bonus Currency:</span>
+                        <span class="pixel-font text-[10px] text-amber-300 font-mono" id="clear-bonus">+0</span>
                     </div>
                 </div>
 
-                <button id="btn-open-shop" class="pixel-font w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs rounded-xl shadow-lg hover:from-blue-500 hover:to-indigo-500 border border-blue-400/20">
-                    ACCESS SHOP TERMINAL
+                <button id="btn-open-shop" class="pixel-font w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] rounded shadow-lg border border-blue-400/20">
+                    ACCESS UPGRADE TERMINAL
                 </button>
             </div>
         </div>
 
         <!-- ================= PAUSE MODAL ================= -->
         <div id="pause-screen" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-25 hidden">
-            <div class="bg-slate-900 border border-slate-700 rounded-2xl p-8 max-w-sm w-full text-center space-y-6 shadow-2xl">
-                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto border border-slate-600 animate-pulse">
-                    <i class="fa-solid fa-circle-pause text-blue-400 text-3xl"></i>
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-xs w-full text-center space-y-4 shadow-2xl">
+                <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto border border-slate-600 animate-pulse">
+                    <i class="fa-solid fa-circle-pause text-blue-400 text-2xl"></i>
                 </div>
                 <div>
-                    <h2 class="pixel-font text-lg text-blue-400 uppercase tracking-widest">System Paused</h2>
-                    <p class="text-slate-400 text-xs mt-1">Ready to resume operation when you are ready.</p>
+                    <h2 class="pixel-font text-xs md:text-sm text-blue-400 uppercase tracking-wider">System Paused</h2>
+                    <p class="text-slate-400 text-[10px] mt-0.5">Maneuvers are safely suspended.</p>
                 </div>
 
-                <button id="btn-resume-game" class="pixel-font w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs rounded-xl shadow-lg border border-blue-400/20">
-                    RESUME FLIGHT <i class="fa-solid fa-play ml-1"></i>
+                <button id="btn-resume-game" class="pixel-font w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] rounded shadow-lg border border-blue-400/20">
+                    RESUME FLIGHT <i class="fa-solid fa-play ml-0.5"></i>
                 </button>
             </div>
         </div>
 
         <!-- ================= CUSTOM REUSE DIALOG/CONFIRMATION MODAL ================= -->
         <div id="confirm-modal" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-40 hidden">
-            <div class="bg-slate-900 border border-rose-500/40 rounded-2xl p-6 max-w-md w-full text-center space-y-5 shadow-2xl">
-                <div class="w-12 h-12 bg-rose-500/10 border border-rose-500/30 rounded-full flex items-center justify-center mx-auto">
-                    <i class="fa-solid fa-triangle-exclamation text-rose-500 text-xl"></i>
+            <div class="bg-slate-900 border border-rose-500/40 rounded-xl p-5 max-w-sm w-full text-center space-y-4 shadow-2xl">
+                <div class="w-10 h-10 bg-rose-500/10 border border-rose-500/30 rounded-full flex items-center justify-center mx-auto">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="pixel-font text-sm text-slate-200">Wipe Saved Progress?</h3>
-                    <p class="text-slate-400 text-xs mt-2 leading-relaxed">This will reset all your purchased core upgrades, high scores, and persistent leaderboard data. This operation is irreversible.</p>
+                    <h3 class="pixel-font text-xs text-slate-200">Wipe Saved Progress?</h3>
+                    <p class="text-slate-400 text-[10px] mt-1.5 leading-relaxed">This will erase all structural upgrade progression, high scores, and persistent battle records. This operation is irreversible.</p>
                 </div>
-                <div class="flex gap-3">
-                    <button id="btn-confirm-cancel" class="flex-1 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all border border-slate-700">
+                <div class="flex gap-2 text-xs font-bold">
+                    <button id="btn-confirm-cancel" class="flex-1 py-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">
                         CANCEL
                     </button>
-                    <button id="btn-confirm-accept" class="flex-1 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-lg shadow-rose-950/40">
+                    <button id="btn-confirm-accept" class="flex-1 py-2 rounded bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-950/40">
                         WIPE MEMORY
                     </button>
                 </div>
@@ -353,50 +361,50 @@
         </div>
 
         <!-- ================= GAME OVER SCREEN ================= -->
-        <div id="gameover-screen" class="absolute inset-0 bg-slate-950/95 flex items-center justify-center p-4 z-20 hidden">
-            <div class="max-w-2xl w-full bg-slate-900 border border-rose-500/30 rounded-2xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+        <div id="gameover-screen" class="absolute inset-0 bg-slate-950/95 flex items-center justify-center p-4 z-20 hidden overflow-y-auto">
+            <div class="max-w-xl w-full bg-slate-900 border border-rose-500/30 rounded-xl p-4 md:p-6 shadow-2xl space-y-4 max-h-[96vh]">
                 
-                <div class="text-center space-y-2">
-                    <span class="pixel-font text-3xl text-rose-500 font-extrabold block">SYSTEM DEACTIVATED</span>
-                    <span class="text-slate-400 text-xs block">Your reactor gave in. But your legend remains.</span>
+                <div class="text-center space-y-1">
+                    <span class="pixel-font text-xl md:text-2xl text-rose-500 font-extrabold block">SYSTEM DEACTIVATED</span>
+                    <span class="text-slate-400 text-[10px] block">Your reactor gave in. But your legend remains.</span>
                 </div>
 
                 <!-- Stats Summary Block -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-lg text-center">
-                        <span class="text-[10px] text-slate-400 uppercase block mb-1">Final Score</span>
-                        <span class="pixel-font text-sm text-yellow-400 font-mono" id="gov-score">0</span>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded text-center">
+                        <span class="text-[9px] text-slate-400 uppercase block mb-0.5">Final Score</span>
+                        <span class="pixel-font text-[10px] md:text-xs text-yellow-400 font-mono" id="gov-score">0</span>
                     </div>
-                    <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-lg text-center">
-                        <span class="text-[10px] text-slate-400 uppercase block mb-1">Max Wave</span>
-                        <span class="pixel-font text-sm text-blue-400 font-mono" id="gov-wave">0</span>
+                    <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded text-center">
+                        <span class="text-[9px] text-slate-400 uppercase block mb-0.5">Max Wave</span>
+                        <span class="pixel-font text-[10px] md:text-xs text-blue-400 font-mono" id="gov-wave">0</span>
                     </div>
-                    <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-lg text-center">
-                        <span class="text-[10px] text-slate-400 uppercase block mb-1">Kills</span>
-                        <span class="pixel-font text-sm text-rose-400 font-mono" id="gov-kills">0</span>
+                    <div class="bg-slate-955/80 border border-slate-800 p-2.5 rounded text-center">
+                        <span class="text-[9px] text-slate-400 uppercase block mb-0.5">Kills</span>
+                        <span class="pixel-font text-[10px] md:text-xs text-rose-400 font-mono" id="gov-kills">0</span>
                     </div>
-                    <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-lg text-center">
-                        <span class="text-[10px] text-slate-400 uppercase block mb-1">Total Levels</span>
-                        <span class="pixel-font text-sm text-indigo-400 font-mono" id="gov-level">1</span>
+                    <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded text-center">
+                        <span class="text-[9px] text-slate-400 uppercase block mb-0.5">Total Levels</span>
+                        <span class="pixel-font text-[10px] md:text-xs text-indigo-400 font-mono" id="gov-level">1</span>
                     </div>
                 </div>
 
                 <!-- Scoreboard section -->
-                <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl space-y-3">
-                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-800 pb-2">
-                        <i class="fa-solid fa-trophy text-amber-400"></i> Global Survival Leaderboard
+                <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-lg space-y-2">
+                    <h3 class="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1 border-b border-slate-800 pb-1.5">
+                        <i class="fa-solid fa-trophy text-amber-400"></i> Leaderboard Records
                     </h3>
-                    <div class="space-y-1.5 max-h-[180px] overflow-y-auto pr-1" id="gov-leaderboard-container">
+                    <div class="space-y-1 max-h-[140px] overflow-y-auto pr-1" id="gov-leaderboard-container">
                         <!-- Instantiated by JS -->
                     </div>
                 </div>
 
                 <!-- Action Button Cluster -->
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <button id="btn-restart" class="pixel-font flex-1 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs rounded-xl shadow-lg border border-blue-400/20">
+                <div class="flex flex-col sm:flex-row gap-2 text-xs">
+                    <button id="btn-restart" class="pixel-font flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded shadow-lg border border-blue-400/20">
                         REBOOT CONSOLE
                     </button>
-                    <button id="btn-wipe-storage" class="pixel-font py-3.5 px-6 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs rounded-xl border border-slate-700 transition-colors">
+                    <button id="btn-wipe-storage" class="pixel-font py-3 px-4 bg-slate-800 text-slate-400 hover:text-white rounded border border-slate-700 transition-colors">
                         WIPE MEMORY
                     </button>
                 </div>
@@ -408,8 +416,12 @@
     <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
         
-        // --- STREAMING_CHUNK: Preparing sprite assets and images... ---
-        // Assets Preloading Registry
+        // --- PERFORMANCE DETECTOR: Mobile processors ke liye graphics optimize kiye ---
+        // Android/iOS par smooth frames ke liye shadowBlur band rahega.
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth < 1024);
+        const shadowBlurEnabled = !isMobile; // Mobile screens par high-density glow effects off rahenge
+
+        // Assets Preloading Registry - Sprite filenames map kiye
         const assetFileNames = {
             'Acid Slimy': 'Acid Slimy.png',
             'Core Detonator': 'Core Detonator.png',
@@ -439,6 +451,17 @@
         let canvas = null;
         let ctx = null;
         let lastTime = 0;
+        
+        // Missing global variables ko sahi se declare kiya
+        let wave = 1; // Firing wave tracking ke liye
+        let waveTimeLeft = 60.0; // Wave timer limits tracker
+        let camera = { x: 0, y: 0 }; // Scrolling offsets camera variable
+        let enemies = []; // Active monsters array list
+        let projectiles = []; // On-screen active bullets index
+        let drops = []; // Gems aur gold coins ki reference array
+        let particles = []; // Particle explosion systems container
+        let floatingTexts = []; // Floating damage indices
+        let gameShaking = 0; // Camera vibration trigger variable
 
         // Player Core Properties
         const player = {
@@ -457,9 +480,9 @@
             shootRangePercent: 0.20,
             rangeRadius: 200,
             facing: 1, // 1 for right, -1 for left
-            flashTimer: 0, // Hit flash timer
+            flashTimer: 0, // Impact white flash animation duration
             
-            // Invincible Dash Parameters
+            // Invincible Dash parameters list
             dashTimer: 0,
             dashDuration: 0.15,
             isDashing: false,
@@ -489,14 +512,13 @@
         // Background Ambient Dust Particles Array
         let starDustArray = [];
 
-        // --- STREAMING_CHUNK: Setup procedural backgrounds... ---
-        // Live Wave Shifting Background Themes Configuration
+        // --- BACKGROUND THEMES KE DYNAMIC COLORS ---
         const BACKGROUND_THEMES = [
-            { bgColor: '#05070c', gridColor: 'rgba(59, 130, 246, 0.12)', starColor: '#22d3ee', nebColor: 'rgba(59, 130, 246, 0.05)' }, // Deep Blue Warp
-            { bgColor: '#0e0505', gridColor: 'rgba(239, 68, 68, 0.12)', starColor: '#f87171', nebColor: 'rgba(239, 68, 68, 0.05)' },  // Lava Nebula
-            { bgColor: '#030805', gridColor: 'rgba(34, 197, 94, 0.12)', starColor: '#4ade80', nebColor: 'rgba(34, 197, 94, 0.05)' },  // Quantum Emerald
-            { bgColor: '#09050e', gridColor: 'rgba(168, 85, 247, 0.12)', starColor: '#c084fc', nebColor: 'rgba(168, 85, 247, 0.05)' }, // Cosmic Violet
-            { bgColor: '#000000', gridColor: 'rgba(245, 158, 11, 0.12)', starColor: '#fbbf24', nebColor: 'rgba(245, 158, 11, 0.05)' }  // Golden Void
+            { bgColor: '#05070c', gridColor: 'rgba(59, 130, 246, 0.08)', starColor: '#22d3ee', nebColor: 'rgba(59, 130, 246, 0.04)' }, 
+            { bgColor: '#0d0404', gridColor: 'rgba(239, 68, 68, 0.08)', starColor: '#f87171', nebColor: 'rgba(239, 68, 68, 0.04)' },  
+            { bgColor: '#030805', gridColor: 'rgba(34, 197, 94, 0.08)', starColor: '#4ade80', nebColor: 'rgba(34, 197, 94, 0.04)' },  
+            { bgColor: '#08040d', gridColor: 'rgba(168, 85, 247, 0.08)', starColor: '#c084fc', nebColor: 'rgba(168, 85, 247, 0.04)' }, 
+            { bgColor: '#000000', gridColor: 'rgba(245, 158, 11, 0.08)', starColor: '#fbbf24', nebColor: 'rgba(245, 158, 11, 0.04)' }  
         ];
 
         let activeTheme = BACKGROUND_THEMES[0];
@@ -509,8 +531,7 @@
             initStarDust();
         }
 
-        // --- STREAMING_CHUNK: Designing procedural synth and audio loop generator... ---
-        // Procedural Audio Synthesizer
+        // --- PROCEDURAL AUDIO SYNTHESIZER ---
         const AudioSynth = {
             context: null,
             enabled: true,
@@ -522,7 +543,7 @@
                     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
                     this.context = new AudioContextClass();
                 } catch (e) {
-                    console.error("Web Audio API not supported in this browser.", e);
+                    console.error("Web Audio API not supported.", e);
                 }
             },
 
@@ -543,7 +564,7 @@
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(300, now);
                     osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.setValueAtTime(0.06, now);
                     gain.gain.linearRampToValueAtTime(0, now + 0.1);
                     osc.start(now);
                     osc.stop(now + 0.1);
@@ -556,7 +577,7 @@
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(120, now);
                     osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
-                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.setValueAtTime(0.08, now);
                     gain.gain.linearRampToValueAtTime(0, now + 0.15);
                     osc.start(now);
                     osc.stop(now + 0.15);
@@ -569,7 +590,7 @@
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(880, now);
                     osc.frequency.setValueAtTime(1320, now + 0.08);
-                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.setValueAtTime(0.06, now);
                     gain.gain.linearRampToValueAtTime(0, now + 0.25);
                     osc.start(now);
                     osc.stop(now + 0.25);
@@ -582,7 +603,7 @@
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(523.25, now);
                     osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.15);
-                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.setValueAtTime(0.05, now);
                     gain.gain.linearRampToValueAtTime(0, now + 0.15);
                     osc.start(now);
                     osc.stop(now + 0.15);
@@ -596,7 +617,7 @@
                         gain.connect(ctx.destination);
                         osc.type = 'square';
                         osc.frequency.setValueAtTime(freq, now + idx * 0.06);
-                        gain.gain.setValueAtTime(0.06, now + idx * 0.06);
+                        gain.gain.setValueAtTime(0.04, now + idx * 0.06);
                         gain.gain.linearRampToValueAtTime(0, now + idx * 0.06 + 0.2);
                         osc.start(now + idx * 0.06);
                         osc.stop(now + idx * 0.06 + 0.22);
@@ -610,7 +631,7 @@
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(440, now);
                     osc.frequency.exponentialRampToValueAtTime(880, now + 0.25);
-                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.setValueAtTime(0.08, now);
                     gain.gain.linearRampToValueAtTime(0, now + 0.3);
                     osc.start(now);
                     osc.stop(now + 0.3);
@@ -623,7 +644,7 @@
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(600, now);
                     osc.frequency.exponentialRampToValueAtTime(1200, now + 0.12);
-                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.setValueAtTime(0.06, now);
                     gain.gain.linearRampToValueAtTime(0, now + 0.15);
                     osc.start(now);
                     osc.stop(now + 0.15);
@@ -636,7 +657,7 @@
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(200, now);
                     osc.frequency.exponentialRampToValueAtTime(450, now + 0.2);
-                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.setValueAtTime(0.04, now);
                     gain.gain.linearRampToValueAtTime(0, now + 0.2);
                     osc.start(now);
                     osc.stop(now + 0.2);
@@ -649,7 +670,7 @@
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(80, now);
                     osc.frequency.linearRampToValueAtTime(40, now + 0.8);
-                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.setValueAtTime(0.2, now);
                     gain.gain.linearRampToValueAtTime(0, now + 0.8);
                     osc.start(now);
                     osc.stop(now + 0.8);
@@ -670,7 +691,7 @@
                     filter.frequency.exponentialRampToValueAtTime(50, now + 0.3);
 
                     const gain = ctx.createGain();
-                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.setValueAtTime(0.12, now);
                     gain.gain.linearRampToValueAtTime(0, now + 0.3);
 
                     whiteNoise.connect(filter);
@@ -692,9 +713,9 @@
                 osc.frequency.setValueAtTime(55, now);
 
                 filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(150, now);
+                filter.frequency.setValueAtTime(120, now);
 
-                gain.gain.setValueAtTime(this.bgMusicEnabled ? 0.06 : 0, now);
+                gain.gain.setValueAtTime(this.bgMusicEnabled ? 0.04 : 0, now);
 
                 osc.connect(filter);
                 filter.connect(gain);
@@ -705,7 +726,7 @@
                 setInterval(() => {
                     if (this.ambientOsc && this.bgMusicEnabled && this.context && gameState === GAME_STATES.PLAYING) {
                         const time = this.context.currentTime;
-                        const pulseFreq = 100 + Math.sin(time * 0.5) * 60;
+                        const pulseFreq = 80 + Math.sin(time * 0.5) * 50;
                         this.ambientOsc.filter.frequency.setValueAtTime(pulseFreq, time);
                         const rootNotes = [55, 65.41, 73.42, 65.41];
                         const currentRoot = rootNotes[Math.floor(time / 8) % rootNotes.length];
@@ -717,21 +738,18 @@
             setBgMusic(enabled) {
                 this.bgMusicEnabled = enabled;
                 if (this.ambientOsc) {
-                    this.ambientOsc.gain.gain.setValueAtTime(enabled ? 0.06 : 0, this.context.currentTime);
+                    this.ambientOsc.gain.gain.setValueAtTime(enabled ? 0.04 : 0, this.context.currentTime);
                 }
             }
         };
 
-        // --- STREAMING_CHUNK: Binding keyboard events and touch inputs... ---
-        // Input Controls System
+        // --- SYSTEM INPUTS: KEYBOARD AND RESPONSIVE GESTURE DETECT ---
         const keys = {};
         const mouse = { x: 0, y: 0, screenX: 0, screenY: 0 };
         const joystick = { active: false, startX: 0, startY: 0, currentX: 0, currentY: 0, vx: 0, vy: 0 };
 
         window.addEventListener('keydown', (e) => { 
             keys[e.key.toLowerCase()] = true; 
-            
-            // Spacebar trigger for dash
             if (e.key === ' ' && gameState === GAME_STATES.PLAYING) {
                 e.preventDefault();
                 triggerDash();
@@ -751,17 +769,18 @@
             mouse.y = e.clientY - rect.top;
         });
 
-        // Touch Joystick Handlers
+        // Touch Interaction Bounds Block
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         const touchDashBtn = document.getElementById('touch-dash-btn');
 
         window.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
+            // Only start joystick tracking if touch occurs on left half of viewport
             if (touch.clientX < window.innerWidth / 2 && gameState === GAME_STATES.PLAYING) {
                 joystickZone.classList.remove('hidden');
-                joystickZone.style.left = `${touch.clientX - 64}px`;
-                joystickZone.style.bottom = `${window.innerHeight - touch.clientY - 64}px`;
+                joystickZone.style.left = `${touch.clientX - 48}px`;
+                joystickZone.style.bottom = `${window.innerHeight - touch.clientY - 48}px`;
                 joystick.active = true;
                 joystick.startX = touch.clientX;
                 joystick.startY = touch.clientY;
@@ -770,7 +789,7 @@
                 joystick.vx = 0;
                 joystick.vy = 0;
             }
-        });
+        }, { passive: true });
 
         window.addEventListener('touchmove', (e) => {
             if (!joystick.active) return;
@@ -783,7 +802,7 @@
             const dx = joystick.currentX - joystick.startX;
             const dy = joystick.currentY - joystick.startY;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const maxRadius = 50;
+            const maxRadius = 40;
 
             if (dist > 0) {
                 const angle = Math.atan2(dy, dx);
@@ -795,7 +814,7 @@
                 joystick.vx = knobX / maxRadius;
                 joystick.vy = knobY / maxRadius;
             }
-        });
+        }, { passive: true });
 
         window.addEventListener('touchend', () => {
             joystick.active = false;
@@ -805,26 +824,14 @@
             joystickZone.classList.add('hidden');
         });
 
-        touchDashBtn.addEventListener('click', () => {
+        touchDashBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (gameState === GAME_STATES.PLAYING) {
                 triggerDash();
             }
         });
 
-        // --- STREAMING_CHUNK: Declaring system variables, weapons, and stats... ---
-        // Gameplay Core System Variables
-        let wave = 1;
-        let waveTimeLeft = 60.0;
-        let camera = { x: 0, y: 0 };
-        
-        let enemies = [];
-        let projectiles = [];
-        let drops = [];
-        let particles = [];
-        let floatingTexts = [];
-        let gameShaking = 0;
-
-        // Expanded weaponry collection
+        // --- EXPANDED WEAPONS REGISTRY ---
         const weapons = {
             energySpit: {
                 level: 1,
@@ -888,23 +895,24 @@
             }
         };
 
-        // Static dust particle generation
+        // Static space dust background parameters
         function initStarDust() {
             starDustArray = [];
-            for (let i = 0; i < 60; i++) {
+            // Optimize count for mobile devices
+            const dustCount = isMobile ? 25 : 55;
+            for (let i = 0; i < dustCount; i++) {
                 starDustArray.push({
                     x: Math.random() * window.innerWidth,
                     y: Math.random() * window.innerHeight,
-                    speedFactor: 0.1 + Math.random() * 0.4,
-                    size: 1 + Math.random() * 2,
-                    alpha: 0.2 + Math.random() * 0.6
+                    speedFactor: 0.1 + Math.random() * 0.35,
+                    size: 1 + Math.random() * 1.5,
+                    alpha: 0.2 + Math.random() * 0.5
                 });
             }
         }
 
         function triggerDash() {
             if (player.dashCharges > 0 && !player.isDashing) {
-                // Get current move directions
                 let moveX = 0;
                 let moveY = 0;
                 if (keys['w'] || keys['arrowup']) moveY = -1;
@@ -917,7 +925,6 @@
                     moveY = joystick.vy;
                 }
 
-                // Default to facing direction if stationary
                 if (moveX === 0 && moveY === 0) {
                     moveX = player.facing;
                 }
@@ -932,40 +939,43 @@
                 player.dashCooldown = 0;
                 AudioSynth.playSound('dash');
 
-                // Spawn cool trails
-                for (let i = 0; i < 12; i++) {
-                    particles.push(new Particle(player.x, player.y, '#22d3ee', 1.5));
+                // Reduced particle count for mobile stability
+                const trailsCount = isMobile ? 5 : 12;
+                for (let i = 0; i < trailsCount; i++) {
+                    particles.push(new Particle(player.x, player.y, '#22d3ee', 1.2));
                 }
                 syncHUDDashUI();
             }
         }
 
-        // --- STREAMING_CHUNK: Class definitions for custom elements, particles, and floating text... ---
+        // --- ENTITY CLASSES & DETAILED DESIGN ---
         class Particle {
             constructor(x, y, color, sizeMultiplier = 1) {
                 this.x = x;
                 this.y = y;
-                this.vx = (Math.random() - 0.5) * 6;
-                this.vy = (Math.random() - 0.5) * 6;
+                this.vx = (Math.random() - 0.5) * 5;
+                this.vy = (Math.random() - 0.5) * 5;
                 this.color = color;
                 this.alpha = 1;
-                this.decay = 0.02 + Math.random() * 0.03;
-                this.size = (2 + Math.random() * 3) * sizeMultiplier;
+                this.decay = 0.03 + Math.random() * 0.04; // Slightly faster decay for mobile speed
+                this.size = (1.5 + Math.random() * 2) * sizeMultiplier;
             }
 
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vx *= 0.98;
-                this.vy *= 0.98;
+                this.vx *= 0.97;
+                this.vy *= 0.97;
                 this.alpha -= this.decay;
             }
 
             draw() {
                 ctx.save();
                 ctx.globalAlpha = this.alpha;
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = this.color;
+                if (shadowBlurEnabled) {
+                    ctx.shadowBlur = 6;
+                    ctx.shadowColor = this.color;
+                }
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
                 ctx.arc(this.x - camera.x, this.y - camera.y, this.size, 0, Math.PI * 2);
@@ -980,23 +990,25 @@
                 this.y = y;
                 this.text = text;
                 this.color = color;
-                this.vy = -1.5;
+                this.vy = -1.2;
                 this.alpha = 1;
                 this.isCrit = isCrit;
             }
 
             update() {
                 this.y += this.vy;
-                this.alpha -= 0.02;
+                this.alpha -= 0.03;
             }
 
             draw() {
                 ctx.save();
                 ctx.globalAlpha = this.alpha;
                 ctx.fillStyle = this.color;
-                ctx.shadowBlur = this.isCrit ? 12 : 4;
-                ctx.shadowColor = 'black';
-                ctx.font = this.isCrit ? '900 16px Inter' : 'bold 12px Inter';
+                if (shadowBlurEnabled) {
+                    ctx.shadowBlur = this.isCrit ? 10 : 4;
+                    ctx.shadowColor = 'black';
+                }
+                ctx.font = this.isCrit ? '900 13px Inter' : 'bold 10px Inter';
                 ctx.fillText(this.text, this.x - camera.x, this.y - camera.y);
                 ctx.restore();
             }
@@ -1007,7 +1019,7 @@
                 this.x = x;
                 this.y = y;
                 this.type = type;
-                this.radius = type === 'gem' ? 6 : 5;
+                this.radius = type === 'gem' ? 5 : 4.5;
                 this.color = type === 'gem' ? '#c084fc' : '#fbbf24';
                 this.value = type === 'gem' ? 10 : 1;
                 this.pulseTimer = Math.random() * 100;
@@ -1021,7 +1033,7 @@
 
                 if (distToPlayer < magnetRadius) {
                     const angle = Math.atan2(player.y - this.y, player.x - this.x);
-                    const speed = 7 + (magnetRadius - distToPlayer) * 0.12;
+                    const speed = 6 + (magnetRadius - distToPlayer) * 0.12;
                     this.x += Math.cos(angle) * speed;
                     this.y += Math.sin(angle) * speed;
                 }
@@ -1030,8 +1042,10 @@
             draw() {
                 const pulse = 1 + Math.sin(this.pulseTimer) * 0.15;
                 ctx.save();
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
+                if (shadowBlurEnabled) {
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = this.color;
+                }
                 ctx.fillStyle = this.color;
 
                 if (this.type === 'gem') {
@@ -1055,7 +1069,6 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Setting up customized Enemy behaviors & properties... ---
         class Enemy {
             constructor(type, waveMultiplier = 1, sizeMultiplier = 1, isBoss = false) {
                 const angle = Math.random() * Math.PI * 2;
@@ -1066,14 +1079,14 @@
                 this.type = type;
                 this.alive = true;
                 this.isBoss = isBoss;
-                this.flashTimer = 0; // Flash red/white when damaged
+                this.flashTimer = 0; 
                 
                 this.setupTypeProperties(type, waveMultiplier, sizeMultiplier);
                 
                 if (isBoss) {
                     this.maxHealth *= 6;
                     this.health = this.maxHealth;
-                    this.size *= 2.5;
+                    this.size *= 2.2;
                     this.damage *= 1.8;
                     this.speed *= 0.85;
                 }
@@ -1082,9 +1095,9 @@
             }
 
             setupTypeProperties(type, waveMultiplier, sizeMultiplier) {
-                // Apply capped size multiplier: maximum of 2x (double of Wave 1 size)
+                // Strictly cap maximum enemy sizes to 2.0x of the first wave
                 const cappedSizeMultiplier = Math.min(2.0, sizeMultiplier);
-                this.size = 22 * cappedSizeMultiplier;
+                this.size = 20 * cappedSizeMultiplier;
                 this.color = '#ff0000';
                 this.maxHealth = 25 * waveMultiplier;
                 this.damage = 8 * waveMultiplier;
@@ -1110,7 +1123,7 @@
                         this.color = '#1e1b4b';
                         this.maxHealth = 60 * waveMultiplier;
                         this.speed = 1.1;
-                        this.size = 28 * cappedSizeMultiplier;
+                        this.size = 25 * cappedSizeMultiplier;
                         break;
                     case 'Fire Demon':
                         this.color = '#f97316';
@@ -1147,7 +1160,7 @@
                         this.speed = 3.0;
                     }
 
-                    // Separation vector
+                    // Separation vec to avoid overlap clumps
                     enemies.forEach(other => {
                         if (other !== this) {
                             const oDiffX = this.x - other.x;
@@ -1171,7 +1184,7 @@
                     this.shootFireRing();
                     this.actionTimer = 0;
                 } else if (this.type === 'Acid Slimy' && this.actionTimer > 4.0) {
-                    drops.push(new AreaEffectPool(this.x, this.y, this.isBoss ? 90 : 45, '#22c55e', this.isBoss ? 8 : 4));
+                    drops.push(new AreaEffectPool(this.x, this.y, this.isBoss ? 80 : 40, '#22c55e', this.isBoss ? 8 : 4));
                     this.actionTimer = 0;
                 }
             }
@@ -1183,14 +1196,14 @@
 
             shootFireRing() {
                 const angle = Math.atan2(player.y - this.y, player.x - this.x);
-                projectiles.push(new Projectile(this.x, this.y, angle, 3.8, this.damage * 1.2, '#ea580c', false, 8));
+                projectiles.push(new Projectile(this.x, this.y, angle, 3.8, this.damage * 1.2, '#ea580c', false, 7));
             }
 
             takeDamage(amount) {
                 if (!this.alive || this.health <= 0) return;
 
                 this.health -= amount;
-                this.flashTimer = 0.12; // Trigger hit flash
+                this.flashTimer = 0.12; 
                 
                 if (this.health <= 0) {
                     this.alive = false;
@@ -1198,23 +1211,23 @@
                     player.score += Math.round(this.maxHealth * 1.5);
                     AudioSynth.playSound('hit');
 
-                    // Particle explosion on death
-                    const deathParticlesCount = this.isBoss ? 35 : 8;
+                    const deathParticlesCount = this.isBoss ? (isMobile ? 15 : 30) : (isMobile ? 3 : 8);
                     for (let i = 0; i < deathParticlesCount; i++) {
-                        particles.push(new Particle(this.x, this.y, this.color, this.isBoss ? 2 : 1));
+                        particles.push(new Particle(this.x, this.y, this.color, this.isBoss ? 1.8 : 1));
                     }
 
                     if (this.type === 'Core Detonator') {
-                        triggerBlastExplosion(this.x, this.y, this.isBoss ? 200 : 80, this.isBoss ? 100 : 40);
+                        triggerBlastExplosion(this.x, this.y, this.isBoss ? 160 : 75, this.isBoss ? 90 : 35);
                     }
 
-                    // Loot Drops scale
                     if (this.isBoss) {
-                        for (let i = 0; i < 6; i++) {
-                            drops.push(new Drop(this.x + (Math.random() - 0.5) * 50, this.y + (Math.random() - 0.5) * 50, 'gem'));
+                        const gemsCount = isMobile ? 3 : 6;
+                        const goldCount = isMobile ? 8 : 15;
+                        for (let i = 0; i < gemsCount; i++) {
+                            drops.push(new Drop(this.x + (Math.random() - 0.5) * 40, this.y + (Math.random() - 0.5) * 40, 'gem'));
                         }
-                        for (let i = 0; i < 15; i++) {
-                            drops.push(new Drop(this.x + (Math.random() - 0.5) * 80, this.y + (Math.random() - 0.5) * 80, 'coin'));
+                        for (let i = 0; i < goldCount; i++) {
+                            drops.push(new Drop(this.x + (Math.random() - 0.5) * 60, this.y + (Math.random() - 0.5) * 60, 'coin'));
                         }
                         activeBoss = null;
                         document.getElementById('boss-hud-health').classList.add('hidden');
@@ -1230,9 +1243,8 @@
             draw() {
                 ctx.save();
                 
-                // Hit flash filter mechanism
                 if (this.flashTimer > 0) {
-                    ctx.filter = 'brightness(3) saturate(1.5)';
+                    ctx.filter = 'brightness(3) saturate(1.2)';
                 }
 
                 if (imageAssets[this.type] && imageAssets[this.type].complete) {
@@ -1244,8 +1256,10 @@
                         this.size * 2
                     );
                 } else {
-                    ctx.shadowBlur = 12;
-                    ctx.shadowColor = this.color;
+                    if (shadowBlurEnabled) {
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = this.color;
+                    }
                     ctx.fillStyle = this.color;
                     
                     ctx.beginPath();
@@ -1259,7 +1273,7 @@
                     ctx.fill();
 
                     ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = 1.5;
+                    ctx.lineWidth = 1.2;
                     ctx.beginPath();
                     ctx.arc(this.x - camera.x, this.y - camera.y, this.size, 0, Math.PI * 2);
                     ctx.stroke();
@@ -1267,12 +1281,11 @@
 
                 ctx.restore();
 
-                // Draw health bar for normal elites (Boss health is tracked in HUD)
                 if (this.health < this.maxHealth && !this.isBoss) {
                     const barWidth = this.size * 1.6;
-                    const barHeight = 4;
+                    const barHeight = 3;
                     const bx = this.x - camera.x - barWidth / 2;
-                    const by = this.y - camera.y - this.size - 10;
+                    const by = this.y - camera.y - this.size - 8;
                     
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
                     ctx.fillRect(bx, by, barWidth, barHeight);
@@ -1284,7 +1297,6 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Structuring Hazards and Projectile parameters... ---
         class AreaEffectPool {
             constructor(x, y, radius, color, damagePerSec) {
                 this.x = x;
@@ -1298,7 +1310,6 @@
 
             update(dt) {
                 this.timer -= dt;
-                
                 const dist = Math.hypot(player.x - this.x, player.y - this.y);
                 if (dist < this.radius + player.radius) {
                     damagePlayer(this.damage * dt);
@@ -1307,24 +1318,24 @@
 
             draw() {
                 ctx.save();
-                ctx.globalAlpha = 0.25;
+                ctx.globalAlpha = 0.22;
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
                 ctx.arc(this.x - camera.x, this.y - camera.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
                 
-                ctx.globalAlpha = 0.55;
+                ctx.globalAlpha = 0.5;
                 ctx.strokeStyle = this.color;
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                ctx.arc(this.x - camera.x, this.y - camera.y, this.radius * (0.9 + Math.sin(Date.now() * 0.005) * 0.05), 0, Math.PI * 2);
+                ctx.arc(this.x - camera.x, this.y - camera.y, this.radius * (0.92 + Math.sin(Date.now() * 0.005) * 0.04), 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.restore();
             }
         }
 
         class Projectile {
-            constructor(x, y, angle, speed, damage, color, isFriendly = true, size = 6, behavior = 'straight') {
+            constructor(x, y, angle, speed, damage, color, isFriendly = true, size = 5, behavior = 'straight') {
                 this.x = x;
                 this.y = y;
                 this.angle = angle;
@@ -1337,7 +1348,7 @@
                 this.size = size;
                 this.alive = true;
                 this.lifespan = 4.0;
-                this.behavior = behavior; // 'straight' or 'homing'
+                this.behavior = behavior; 
                 this.homingTarget = null;
             }
 
@@ -1348,7 +1359,6 @@
                 }
 
                 if (this.behavior === 'homing' && this.isFriendly) {
-                    // Look for closest target to home in
                     if (!this.homingTarget || !this.homingTarget.alive) {
                         let closestDist = Infinity;
                         enemies.forEach(e => {
@@ -1364,11 +1374,9 @@
 
                     if (this.homingTarget && this.homingTarget.alive) {
                         const targetAngle = Math.atan2(this.homingTarget.y - this.y, this.homingTarget.x - this.x);
-                        // Slowly turn the rocket vector towards the target
                         let angleDiff = targetAngle - this.angle;
-                        // Normalize angleDiff to -PI to PI
                         angleDiff = Math.atan2(Math.sin(angleDiff), Math.cos(angleDiff));
-                        this.angle += angleDiff * 0.12; // Turn rate
+                        this.angle += angleDiff * 0.12; 
 
                         this.vx = Math.cos(this.angle) * this.speed;
                         this.vy = Math.sin(this.angle) * this.speed;
@@ -1378,16 +1386,18 @@
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // Spawn trails if homing missile rocket
-                if (this.behavior === 'homing') {
-                    particles.push(new Particle(this.x, this.y, '#f97316', 0.5));
+                // Throttled trails logic on mobile to save frames
+                if (this.behavior === 'homing' && Math.random() < (isMobile ? 0.35 : 0.8)) {
+                    particles.push(new Particle(this.x, this.y, '#f97316', 0.4));
                 }
             }
 
             draw() {
                 ctx.save();
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
+                if (shadowBlurEnabled) {
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = this.color;
+                }
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
                 ctx.arc(this.x - camera.x, this.y - camera.y, this.size, 0, Math.PI * 2);
@@ -1398,10 +1408,10 @@
 
         function triggerBlastExplosion(x, y, radius, damage) {
             AudioSynth.playSound('explode');
-            gameShaking = 15;
+            gameShaking = isMobile ? 8 : 14; // Lighter camera shakes on mobile
             
-            particles.push(new Particle(x, y, '#ef4444', 3));
-            particles.push(new Particle(x, y, '#fb923c', 3.5));
+            particles.push(new Particle(x, y, '#ef4444', 2.2));
+            particles.push(new Particle(x, y, '#fb923c', 2.6));
 
             enemies.forEach(enemy => {
                 if (!enemy.alive) return;
@@ -1417,7 +1427,7 @@
             if (gameState !== GAME_STATES.PLAYING || player.isDashing) return;
             
             player.health -= amount;
-            player.flashTimer = 0.15; // Set flash white indicator
+            player.flashTimer = 0.15; 
             AudioSynth.playSound('hit');
 
             if (player.health <= 0) {
@@ -1426,18 +1436,17 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Implementing main render options for player and dynamic effects... ---
         function drawPlayer() {
             ctx.save();
             
             if (player.flashTimer > 0) {
-                ctx.filter = 'brightness(3) saturate(1.5)';
+                ctx.filter = 'brightness(3) saturate(1.2)';
             }
 
-            // Draw hero image if preloaded; else procedural glowing fallbacks
+            // Fixed player size bounds to respect original proportions perfectly
             if (imageAssets['hero'] && imageAssets['hero'].complete) {
                 ctx.translate(player.x - camera.x, player.y - camera.y);
-                ctx.scale(player.facing, 1); // Flip facing direction
+                ctx.scale(player.facing, 1); 
                 
                 ctx.drawImage(
                     imageAssets['hero'],
@@ -1447,230 +1456,96 @@
                     player.radius * 3
                 );
             } else {
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#3b82f6';
+                if (shadowBlurEnabled) {
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = '#3b82f6';
+                }
                 
-                // Outer ring
                 ctx.fillStyle = '#1e3a8a';
                 ctx.beginPath();
                 ctx.arc(player.x - camera.x, player.y - camera.y, player.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Core inner circle
                 ctx.fillStyle = '#60a5fa';
                 ctx.beginPath();
                 ctx.arc(player.x - camera.x, player.y - camera.y, player.radius * 0.6, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Center energy bulb
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.arc(player.x - camera.x, player.y - camera.y, player.radius * 0.3 * (1 + Math.sin(Date.now() * 0.01) * 0.2), 0, Math.PI * 2);
+                ctx.arc(player.x - camera.x, player.y - camera.y, player.radius * 0.3, 0, Math.PI * 2);
                 ctx.fill();
-
-                if (player.health > player.maxHealth * 0.5) {
-                    ctx.strokeStyle = '#60a5fa';
-                    ctx.globalAlpha = 0.3;
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(player.x - camera.x, player.y - camera.y, player.radius * 1.5, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
             }
 
             ctx.restore();
 
-            // Draw Targeting Vector Ring representing autofire bounds limit (strictly capped between 20% and 50% screen)
+            // Auto targeting limit line (Strictly capped range matching mobile screen spaces)
             ctx.save();
-            ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)';
-            ctx.setLineDash([5, 5]);
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.12)';
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.arc(player.x - camera.x, player.y - camera.y, player.rangeRadius, 0, Math.PI * 2);
             ctx.stroke();
             ctx.restore();
         }
 
-        // --- STREAMING_CHUNK: Shop upgrades database and price calculations... ---
-        // Upgrade Terminal DB - Simplified Small Meaningful Simple Names
+        // --- UPGRADE TERMINAL MECHANICS & PRICE SCALES ---
         const shopUpgrades = [
-            {
-                id: 'maxHealth',
-                name: 'Max Health',
-                desc: 'Increases maximum structural health by 25 points.',
-                baseCost: 20,
-                costScale: 1.5,
-                maxLevel: 10,
-                icon: 'fa-heart'
-            },
-            {
-                id: 'hpRegen',
-                name: 'Heal Regen',
-                desc: 'Slowly regenerates 1 Health point per second automatically.',
-                baseCost: 35,
-                costScale: 1.7,
-                maxLevel: 5,
-                icon: 'fa-circle-plus'
-            },
-            {
-                id: 'movementSpeed',
-                name: 'Run Speed',
-                desc: 'Boosts total engine traversal velocity by 12%.',
-                baseCost: 15,
-                costScale: 1.4,
-                maxLevel: 8,
-                icon: 'fa-gauge-high'
-            },
-            {
-                id: 'attackDamage',
-                name: 'Damage Boost',
-                desc: 'Amplifies strike power of all weapons by 20%.',
-                baseCost: 25,
-                costScale: 1.6,
-                maxLevel: 10,
-                icon: 'fa-burst'
-            },
-            {
-                id: 'fireRate',
-                name: 'Fire Rate',
-                desc: 'Improves cooldown processing cycle speed by 10%.',
-                baseCost: 30,
-                costScale: 1.6,
-                maxLevel: 8,
-                icon: 'fa-bolt'
-            },
-            {
-                id: 'rangeLimit',
-                name: 'Target Range',
-                desc: 'Improves autofire range, capped strictly at maximum 50% of the screen width.',
-                baseCost: 20,
-                costScale: 1.5,
-                maxLevel: 6,
-                icon: 'fa-circle-dot'
-            },
-            {
-                id: 'magnetRadius',
-                name: 'Item Magnet',
-                desc: 'Spreads gold and gem collection extraction range.',
-                baseCost: 15,
-                costScale: 1.4,
-                maxLevel: 5,
-                icon: 'fa-expand'
-            },
-            {
-                id: 'dashCooldownUpgrade',
-                name: 'Dash Speed',
-                desc: 'Reduces passive dash recharge time by 15%.',
-                baseCost: 20,
-                costScale: 1.5,
-                maxLevel: 5,
-                icon: 'fa-wind'
-            },
-            {
-                id: 'weapon_orbitBlades',
-                name: 'Orbit Blade',
-                desc: 'Spins high-energy blade rings around your player core.',
-                baseCost: 40,
-                costScale: 2.0,
-                maxLevel: 5,
-                icon: 'fa-arrows-spin',
-                isWeapon: true,
-                weaponKey: 'orbitBlades'
-            },
-            {
-                id: 'weapon_lightningSmiters',
-                name: 'Lightning Zap',
-                desc: 'Strikes random targets within firing sectors for high damage.',
-                baseCost: 50,
-                costScale: 2.0,
-                maxLevel: 5,
-                icon: 'fa-bolt-lightning',
-                isWeapon: true,
-                weaponKey: 'lightningSmiters'
-            },
-            {
-                id: 'weapon_voidVortex',
-                name: 'Void Vortex',
-                desc: 'Generates swirling miniature blackholes sucking in enemies.',
-                baseCost: 60,
-                costScale: 2.2,
-                maxLevel: 5,
-                icon: 'fa-tornado',
-                isWeapon: true,
-                weaponKey: 'voidVortex'
-            },
-            {
-                id: 'weapon_homingRockets',
-                name: 'Seeker Rocket',
-                desc: 'Fires auto-seeking rockets seeking nearest targets to explode.',
-                baseCost: 55,
-                costScale: 2.0,
-                maxLevel: 5,
-                icon: 'fa-rocket',
-                isWeapon: true,
-                weaponKey: 'homingRockets'
-            },
-            {
-                id: 'weapon_spreadFire',
-                name: 'Spread Shot',
-                desc: 'Fires forward spreading multi-projectile plasma streams.',
-                baseCost: 45,
-                costScale: 1.8,
-                maxLevel: 5,
-                icon: 'fa-wand-magic-sparkles',
-                isWeapon: true,
-                weaponKey: 'spreadFire'
-            }
+            { id: 'maxHealth', name: 'Max Health', desc: 'Increases structural HP limit by 25.', baseCost: 20, costScale: 1.45, maxLevel: 10, icon: 'fa-heart' },
+            { id: 'hpRegen', name: 'Heal Regen', desc: 'Regenerates 1 Health Point every second.', baseCost: 35, costScale: 1.6, maxLevel: 5, icon: 'fa-circle-plus' },
+            { id: 'movementSpeed', name: 'Run Speed', desc: 'Boosts engine speed index by 12%.', baseCost: 15, costScale: 1.35, maxLevel: 8, icon: 'fa-gauge-high' },
+            { id: 'attackDamage', name: 'Damage Boost', desc: 'Amplifies all weapon damage outputs by 20%.', baseCost: 25, costScale: 1.5, maxLevel: 10, icon: 'fa-burst' },
+            { id: 'fireRate', name: 'Fire Rate', desc: 'Accelerates weapon cooldowns by 10%.', baseCost: 30, costScale: 1.5, maxLevel: 8, icon: 'fa-bolt' },
+            { id: 'rangeLimit', name: 'Target Range', desc: 'Widens shooting sectors, strictly capped at 50% screen.', baseCost: 20, costScale: 1.4, maxLevel: 6, icon: 'fa-circle-dot' },
+            { id: 'magnetRadius', name: 'Item Magnet', desc: 'Increases resource magnet extraction range.', baseCost: 15, costScale: 1.35, maxLevel: 5, icon: 'fa-expand' },
+            { id: 'dashCooldownUpgrade', name: 'Dash Speed', desc: 'Accelerates dash recharge speed by 15%.', baseCost: 20, costScale: 1.4, maxLevel: 5, icon: 'fa-wind' },
+            { id: 'weapon_orbitBlades', name: 'Orbit Blade', desc: 'Spins high-energy energy blades around you.', baseCost: 40, costScale: 1.9, maxLevel: 5, icon: 'fa-arrows-spin', isWeapon: true, weaponKey: 'orbitBlades' },
+            { id: 'weapon_lightningSmiters', name: 'Lightning Zap', desc: 'Fires high voltage lightning at random targets.', baseCost: 50, costScale: 1.9, maxLevel: 5, icon: 'fa-bolt-lightning', isWeapon: true, weaponKey: 'lightningSmiters' },
+            { id: 'weapon_voidVortex', name: 'Void Vortex', desc: 'Spawns blackholes pulling enemies together.', baseCost: 60, costScale: 2.1, maxLevel: 5, icon: 'fa-tornado', isWeapon: true, weaponKey: 'voidVortex' },
+            { id: 'weapon_homingRockets', name: 'Seeker Rocket', desc: 'Launches automated homing rocket projectiles.', baseCost: 55, costScale: 1.9, maxLevel: 5, icon: 'fa-rocket', isWeapon: true, weaponKey: 'homingRockets' },
+            { id: 'weapon_spreadFire', name: 'Spread Shot', desc: 'Fires forward spreading multi-projectile streams.', baseCost: 45, costScale: 1.75, maxLevel: 5, icon: 'fa-wand-magic-sparkles', isWeapon: true, weaponKey: 'spreadFire' }
         ];
 
         function getUpgradeCost(upgrade) {
-            const currentLvl = upgrade.isWeapon 
-                ? weapons[upgrade.weaponKey].level 
-                : player.upgrades[upgrade.id];
+            const currentLvl = upgrade.isWeapon ? weapons[upgrade.weaponKey].level : player.upgrades[upgrade.id];
             return Math.round(upgrade.baseCost * Math.pow(upgrade.costScale, currentLvl));
         }
 
-        // --- STREAMING_CHUNK: Rebuilding the Dynamic Upgrade Shop HUD UI... ---
         function populateShopItems() {
             const container = document.getElementById('shop-items-container');
             container.innerHTML = '';
 
             shopUpgrades.forEach(upg => {
-                const currentLvl = upg.isWeapon 
-                    ? weapons[upg.weaponKey].level 
-                    : player.upgrades[upg.id];
+                const currentLvl = upg.isWeapon ? weapons[upg.weaponKey].level : player.upgrades[upg.id];
                 const isMax = currentLvl >= upg.maxLevel;
                 const cost = getUpgradeCost(upg);
                 const canAfford = player.gold >= cost;
 
                 const card = document.createElement('div');
-                card.className = `p-4 rounded-xl border transition-all ${
-                    isMax 
-                    ? 'bg-slate-950/40 border-slate-800 opacity-60' 
-                    : 'bg-slate-900 border-slate-800 hover:border-blue-500/50'
+                card.className = `p-2.5 rounded-lg border transition-all ${
+                    isMax ? 'bg-slate-950/40 border-slate-800 opacity-60' : 'bg-slate-900 border-slate-800'
                 }`;
 
                 card.innerHTML = `
-                    <div class="flex items-start gap-3">
-                        <div class="p-2.5 rounded-lg bg-slate-950 text-blue-400 border border-slate-800">
-                            <i class="fa-solid ${upg.icon} text-lg"></i>
+                    <div class="flex items-start gap-2.5">
+                        <div class="p-1.5 md:p-2 rounded bg-slate-955 text-blue-400 border border-slate-800">
+                            <i class="fa-solid ${upg.icon} text-sm md:text-md"></i>
                         </div>
-                        <div class="flex-1 min-w-0">
+                        <div class="flex-1 min-w-0 text-left">
                             <div class="flex items-center justify-between">
-                                <h4 class="font-bold text-sm text-slate-200 truncate">${upg.name}</h4>
-                                <span class="text-[10px] font-semibold text-slate-400 uppercase">
+                                <h4 class="font-bold text-[11px] md:text-xs text-slate-200 truncate">${upg.name}</h4>
+                                <span class="text-[8px] md:text-[9px] font-semibold text-slate-400">
                                     LV ${currentLvl}/${upg.maxLevel}
                                 </span>
                             </div>
-                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">${upg.desc}</p>
+                            <p class="text-[9px] md:text-[10px] text-slate-400 mt-0.5 leading-tight">${upg.desc}</p>
                             
-                            <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-800/80">
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80">
                                 ${isMax 
-                                    ? '<span class="text-xs font-bold text-emerald-400">FULLY UPGRADED</span>' 
-                                    : `<button class="btn-buy-upgrade px-3 py-1.5 rounded text-xs font-bold transition-all ${
-                                        canAfford 
-                                        ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-[0_2px_8px_rgba(245,158,11,0.2)]' 
-                                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                    ? '<span class="text-[9px] font-bold text-emerald-400">MAX</span>' 
+                                    : `<button class="btn-buy-upgrade px-2 py-1 rounded text-[9px] font-bold transition-all ${
+                                        canAfford ? 'bg-amber-500 hover:bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                                       }" data-id="${upg.id}">
                                         BUY: <i class="fa-solid fa-coins mr-0.5"></i>${cost}
                                       </button>`
@@ -1709,7 +1584,6 @@
                         player.health += 25;
                     }
                 }
-
                 populateShopItems();
             }
         }
@@ -1722,13 +1596,12 @@
 
             const statsList = document.getElementById('shop-stats-list');
             statsList.innerHTML = `
-                <div class="flex justify-between"><span>Maximum Integrity:</span><span class="text-white font-bold">${player.maxHealth} HP</span></div>
+                <div class="flex justify-between"><span>Max Integrity:</span><span class="text-white font-bold">${player.maxHealth} HP</span></div>
                 <div class="flex justify-between"><span>Engine Velocity:</span><span class="text-white font-bold">${(3.5 * (1 + (player.upgrades.movementSpeed-1)*0.12)).toFixed(2)} mach</span></div>
-                <div class="flex justify-between"><span>Offensive Multiplier:</span><span class="text-white font-bold">+${((player.upgrades.attackDamage - 1) * 20)}%</span></div>
-                <div class="flex justify-between"><span>Firing Sector Radius:</span><span class="text-white font-bold">${(player.shootRangePercent * 100).toFixed(0)}% screen</span></div>
-                <div class="flex justify-between"><span>Auto-Repair Speed:</span><span class="text-white font-bold">${player.upgrades.hpRegen} HP/sec</span></div>
-                <div class="flex justify-between"><span>Magnet Extraction:</span><span class="text-white font-bold">${60 + player.upgrades.magnetRadius * 35} units</span></div>
-                <div class="flex justify-between"><span>Dash Reload Speed:</span><span class="text-white font-bold">${(3.0 * (1 - (player.upgrades.dashCooldownUpgrade - 1) * 0.15)).toFixed(1)} sec</span></div>
+                <div class="flex justify-between"><span>Strike Multiplier:</span><span class="text-white font-bold">+${((player.upgrades.attackDamage - 1) * 20)}%</span></div>
+                <div class="flex justify-between"><span>Target Sector:</span><span class="text-white font-bold">${(player.shootRangePercent * 100).toFixed(0)}% screen</span></div>
+                <div class="flex justify-between"><span>Heal speed:</span><span class="text-white font-bold">${player.upgrades.hpRegen} HP/sec</span></div>
+                <div class="flex justify-between"><span>Magnet Radius:</span><span class="text-white font-bold">${60 + player.upgrades.magnetRadius * 35} units</span></div>
             `;
 
             const weaponsVisualizers = document.getElementById('shop-weapon-visualizers');
@@ -1740,29 +1613,26 @@
                 const progressWidth = (wp.level / 5) * 100;
                 
                 const node = document.createElement('div');
-                node.className = `bg-slate-900 border p-2 rounded flex flex-col items-center justify-between text-center min-h-[75px] ${
-                    isEvolved ? 'border-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]' : 'border-slate-800'
+                node.className = `bg-slate-900 border p-1.5 rounded flex flex-col items-center justify-between text-center min-h-[55px] ${
+                    isEvolved ? 'border-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.2)]' : 'border-slate-800'
                 }`;
                 node.innerHTML = `
                     <span class="text-[8px] truncate max-w-full font-bold ${isEvolved ? 'text-rose-400' : 'text-slate-400'}" title="${dispName}">
-                        ${isEvolved ? '🔥 ' : ''}${dispName}
+                        ${dispName}
                     </span>
-                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1">
+                    <div class="w-full h-1 bg-slate-800 rounded-full overflow-hidden mt-1">
                         <div class="h-full rounded-full" style="background-color: ${isEvolved ? '#ef4444' : color}; width: ${Math.min(100, progressWidth)}%"></div>
                     </div>
-                    <span class="text-[9px] font-bold ${isEvolved ? 'text-rose-400' : 'text-white'} mt-1">
-                        ${isEvolved ? 'EVOLVED' : `LV ${wp.level}`}
-                    </span>
                 `;
                 weaponsVisualizers.appendChild(node);
             }
         }
 
-        // --- STREAMING_CHUNK: Local Storage handlers & Leaderboards management... ---
-        // Secure Persistent Storage Modules
+        // --- LOCAL PERSISTENCE HANDLERS ---
         const LEADERBOARD_KEY = "neon_survivors_leaderboard";
         const SAVE_STATE_KEY = "neon_survivors_save_state";
 
+        // Game state data local storage mein save karne ke liye
         function saveGameStateToStorage() {
             const data = {
                 gold: player.gold,
@@ -1775,6 +1645,7 @@
             localStorage.setItem(SAVE_STATE_KEY, JSON.stringify(data));
         }
 
+        // Game progression load karne ke liye
         function loadGameStateFromStorage() {
             const saved = localStorage.getItem(SAVE_STATE_KEY);
             if (saved) {
@@ -1790,7 +1661,7 @@
                     player.maxHealth = 100 + (player.upgrades.maxHealth - 1) * 25;
                     player.health = player.maxHealth;
                 } catch (e) {
-                    console.error("Failed loading survival progress saves.", e);
+                    console.error("Failed loading survival save state.", e);
                 }
             }
         }
@@ -1844,26 +1715,26 @@
             board.forEach((entry, index) => {
                 const isPlayer = entry.name.startsWith("You (Survivor");
                 const row = document.createElement('div');
-                row.className = `flex justify-between items-center text-xs p-2 rounded ${
+                row.className = `flex justify-between items-center text-[10px] md:text-xs p-1.5 rounded ${
                     isPlayer 
                     ? 'bg-blue-500/10 border border-blue-500/30 font-bold' 
                     : 'bg-slate-900/60'
                 }`;
                 row.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="pixel-font text-[10px] text-slate-500">#${index + 1}</span>
-                        <span class="text-slate-200">${entry.name}</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="pixel-font text-[8px] text-slate-500">#${index + 1}</span>
+                        <span class="text-slate-200 truncate max-w-[120px]">${entry.name}</span>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
                         <span class="text-slate-400">Wave ${entry.wave}</span>
-                        <span class="pixel-font text-[11px] text-amber-300 font-mono">${entry.score}</span>
+                        <span class="pixel-font text-[9px] text-amber-300 font-mono">${entry.score}</span>
                     </div>
                 `;
                 container.appendChild(row);
             });
         }
 
-        // --- STREAMING_CHUNK: Processing offensive firing rates and mechanics... ---
+        // --- WEAPONRY LOGIC EMISSIONS ---
         function processWeaponsAndFire(dt) {
             player.rangeRadius = Math.max(canvas ? canvas.width : window.innerWidth, canvas ? canvas.height : window.innerHeight) * player.shootRangePercent;
 
@@ -1879,7 +1750,7 @@
                 .filter(item => item.dist <= player.rangeRadius && item.enemy.alive)
                 .sort((a, b) => a.dist - b.dist);
 
-            // 1. Plasma Blaster (Plasma shooting)
+            // 1. Plasma Blaster
             if (weapons.energySpit.level > 0) {
                 weapons.energySpit.timer += dt;
                 const threshold = weapons.energySpit.cooldown * fireRateFactor;
@@ -1901,7 +1772,7 @@
                             finalDmg, 
                             isEvolved ? '#f43f5e' : weapons.energySpit.color, 
                             true,
-                            isEvolved ? 9 : 6
+                            isEvolved ? 8 : 5
                         ));
                         
                         AudioSynth.playSound('shoot');
@@ -1910,7 +1781,7 @@
                 }
             }
 
-            // 2. Orbit Blade (Spin Shard)
+            // 2. Orbit Blade
             if (weapons.orbitBlades.level > 0) {
                 const isEvolved = weapons.orbitBlades.level >= 5;
                 const qty = isEvolved ? 6 : weapons.orbitBlades.level; 
@@ -1926,25 +1797,27 @@
                     const bladeY = player.y + Math.sin(offsetAngle) * actualRadius;
 
                     ctx.save();
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = isEvolved ? '#ef4444' : weapons.orbitBlades.color;
+                    if (shadowBlurEnabled) {
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = isEvolved ? '#ef4444' : weapons.orbitBlades.color;
+                    }
                     ctx.fillStyle = isEvolved ? '#f43f5e' : weapons.orbitBlades.color;
                     ctx.beginPath();
-                    ctx.arc(bladeX - camera.x, bladeY - camera.y, isEvolved ? 10 : 7, 0, Math.PI * 2);
+                    ctx.arc(bladeX - camera.x, bladeY - camera.y, isEvolved ? 9 : 6, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
 
                     enemies.forEach(enemy => {
                         if (!enemy.alive) return;
                         const distToBlade = Math.hypot(enemy.x - bladeX, enemy.y - bladeY);
-                        if (distToBlade < enemy.size + (isEvolved ? 10 : 7)) {
+                        if (distToBlade < enemy.size + (isEvolved ? 9 : 6)) {
                             enemy.takeDamage(finalDmg * dt * 5.5);
                         }
                     });
                 }
             }
 
-            // 3. Lightning Zap (Voltage chain strikes)
+            // 3. Lightning Zap
             if (weapons.lightningSmiters.level > 0) {
                 weapons.lightningSmiters.timer += dt;
                 const threshold = weapons.lightningSmiters.cooldown * fireRateFactor;
@@ -1964,15 +1837,16 @@
 
                             ctx.save();
                             ctx.strokeStyle = isEvolved ? '#ef4444' : '#f59e0b';
-                            ctx.lineWidth = isEvolved ? 6 : 4;
-                            ctx.shadowBlur = 15;
-                            ctx.shadowColor = isEvolved ? '#ef4444' : '#f59e0b';
+                            ctx.lineWidth = isEvolved ? 5 : 3.5;
+                            if (shadowBlurEnabled) {
+                                ctx.shadowBlur = 10;
+                                ctx.shadowColor = isEvolved ? '#ef4444' : '#f59e0b';
+                            }
                             ctx.beginPath();
                             ctx.moveTo(player.x - camera.x, player.y - camera.y);
                             
-                            // Visual lightning jag mechanics
-                            const midX = (player.x + target.x) / 2 + (Math.random() - 0.5) * 45;
-                            const midY = (player.y + target.y) / 2 + (Math.random() - 0.5) * 45;
+                            const midX = (player.x + target.x) / 2 + (Math.random() - 0.5) * 35;
+                            const midY = (player.y + target.y) / 2 + (Math.random() - 0.5) * 35;
                             
                             ctx.lineTo(midX - camera.x, midY - camera.y);
                             ctx.lineTo(target.x - camera.x, target.y - camera.y);
@@ -2011,7 +1885,7 @@
                 }
             }
 
-            // 5. Seeker Rockets (Homing Missile Array)
+            // 5. Seeker Rocket (Homing)
             if (weapons.homingRockets.level > 0) {
                 weapons.homingRockets.timer += dt;
                 const threshold = weapons.homingRockets.cooldown * fireRateFactor;
@@ -2019,28 +1893,26 @@
                 if (weapons.homingRockets.timer >= threshold) {
                     if (activeTargets.length > 0) {
                         const isEvolved = weapons.homingRockets.level >= 5;
-                        const rocketCount = isEvolved ? 3 : 1;
+                        const rocketCount = isEvolved ? 2 : 1; 
                         const dmgMultiplier = 1 + (player.upgrades.attackDamage - 1) * 0.20;
                         const finalDmg = weapons.homingRockets.damage * dmgMultiplier;
 
                         for (let i = 0; i < rocketCount; i++) {
-                            // Fire rocket at varying angles
-                            const offsetAngle = (Math.random() - 0.5) * 0.8;
+                            const offsetAngle = (Math.random() - 0.5) * 0.6;
                             const target = activeTargets[0].enemy;
                             const baseAngle = Math.atan2(target.y - player.y, target.x - player.x) + offsetAngle;
 
-                            const rocketProj = new Projectile(
+                            projectiles.push(new Projectile(
                                 player.x,
                                 player.y,
                                 baseAngle,
-                                6.0,
+                                5.5,
                                 finalDmg,
                                 weapons.homingRockets.color,
                                 true,
-                                8,
+                                7,
                                 'homing'
-                            );
-                            projectiles.push(rocketProj);
+                            ));
                             AudioSynth.playSound('rocket_fire');
                         }
                         weapons.homingRockets.timer = 0;
@@ -2048,7 +1920,7 @@
                 }
             }
 
-            // 6. Spread Shot (Cyclone Burst firing in cone)
+            // 6. Spread Shot
             if (weapons.spreadFire.level > 0) {
                 weapons.spreadFire.timer += dt;
                 const threshold = weapons.spreadFire.cooldown * fireRateFactor;
@@ -2059,27 +1931,25 @@
                         const baseAngle = Math.atan2(target.y - player.y, target.x - player.x);
                         
                         const isEvolved = weapons.spreadFire.level >= 5;
-                        const bulletCount = isEvolved ? 7 : (3 + (weapons.spreadFire.level - 1));
+                        const bulletCount = isEvolved ? 6 : (3 + (weapons.spreadFire.level - 1));
                         const dmgMultiplier = 1 + (player.upgrades.attackDamage - 1) * 0.20;
                         const finalDmg = weapons.spreadFire.damage * dmgMultiplier;
 
-                        // Shoot projectiles in spread cone
-                        const coneAngleRange = 0.5; // Width of spread
+                        const coneAngleRange = 0.45; 
                         for (let i = 0; i < bulletCount; i++) {
                             const angleOffset = coneAngleRange * (i / (bulletCount - 1) - 0.5);
                             projectiles.push(new Projectile(
                                 player.x,
                                 player.y,
                                 baseAngle + angleOffset,
-                                8.5,
+                                8.0,
                                 finalDmg,
                                 weapons.spreadFire.color,
                                 true,
-                                5,
+                                4.5,
                                 'straight'
                             ));
                         }
-
                         AudioSynth.playSound('shoot');
                         weapons.spreadFire.timer = 0;
                     }
@@ -2087,7 +1957,6 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Spawning mechanics and procedural loops... ---
         class VoidVortexEntity {
             constructor(x, y, radius, damage, duration, evolved = false) {
                 this.x = x;
@@ -2108,9 +1977,8 @@
                     if (!enemy.alive) return;
                     const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
                     if (dist < this.radius) {
-                        // Stronger vacuum pull for evolved blackholes
                         const pullAngle = Math.atan2(this.y - enemy.y, this.x - enemy.x);
-                        const pullForce = this.evolved ? 2.5 : 1.5;
+                        const pullForce = this.evolved ? 2.2 : 1.3;
                         enemy.x += Math.cos(pullAngle) * pullForce;
                         enemy.y += Math.sin(pullAngle) * pullForce;
 
@@ -2122,15 +1990,15 @@
             draw() {
                 const scale = 1 + Math.sin(this.pulse) * 0.1;
                 ctx.save();
-                ctx.globalAlpha = 0.35;
+                ctx.globalAlpha = 0.3;
                 ctx.fillStyle = this.evolved ? '#ef4444' : '#8b5cf6';
                 ctx.beginPath();
                 ctx.arc(this.x - camera.x, this.y - camera.y, this.radius * scale, 0, Math.PI * 2);
                 ctx.fill();
 
-                ctx.globalAlpha = 0.6;
+                ctx.globalAlpha = 0.55;
                 ctx.strokeStyle = this.evolved ? '#f43f5e' : '#c084fc';
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 2.5;
                 ctx.beginPath();
                 ctx.arc(this.x - camera.x, this.y - camera.y, this.radius * 0.6 * scale, this.pulse, this.pulse + Math.PI, false);
                 ctx.stroke();
@@ -2138,18 +2006,16 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Managing enemy spawn wave difficulty modifiers... ---
-        // Enemy Wave Generator
+        // --- ENEMY SPAWNER LOGIC ---
         let spawnTimer = 0;
         function processEnemySpawning(dt) {
             spawnTimer += dt;
             
             const waveMultiplier = 1 + (wave - 1) * 0.20;
-            // Cap the size multiplier at 2.0 (max 2x)
+            // Strict Size Cap: Double of baseline size maximum, never grow beyond 2.0x index
             const sizeMultiplier = Math.min(2.0, 1 + (wave - 1) * 0.05);
-            const spawnInterval = Math.max(0.35, 1.8 - (wave * 0.18));
+            const spawnInterval = Math.max(0.4, 1.8 - (wave * 0.16));
 
-            // Har 5th wave ek "Boss Wave" hai! Wave timer me boss spawn point 30s left
             if (wave % 5 === 0 && !bossSpawned && waveTimeLeft <= 30.0 && waveTimeLeft > 0) {
                 spawnWaveBoss(waveMultiplier, sizeMultiplier);
             }
@@ -2175,28 +2041,25 @@
             bossSpawned = true;
             AudioSynth.playSound('boss_spawn');
             
-            // Spawn warning animation and show boss HUD elements
             const alertBanner = document.getElementById('boss-alert-banner');
             alertBanner.classList.remove('hidden');
-            setTimeout(() => { alertBanner.classList.add('hidden'); }, 4000);
+            setTimeout(() => { alertBanner.classList.add('hidden'); }, 3500);
 
             const bossTypes = ['Dark Warrior', 'Fire Demon', 'Crystal Cutter'];
             const chosenBoss = bossTypes[Math.floor(Math.random() * bossTypes.length)];
 
-            // Ensure boss also respects the capped size multiplier
             const cappedSizeMultiplier = Math.min(2.0, sizeMultiplier);
             activeBoss = new Enemy(chosenBoss, waveMultiplier, cappedSizeMultiplier, true);
             enemies.push(activeBoss);
 
-            document.getElementById('boss-name-hud').innerText = `ALPHA ${chosenBoss.toUpperCase()} [WAVE ${wave} BOSS]`;
+            document.getElementById('boss-name-hud').innerText = `ALPHA ${chosenBoss.toUpperCase()} [WAVE ${wave}]`;
             document.getElementById('boss-hud-health').classList.remove('hidden');
         }
 
-        // --- STREAMING_CHUNK: Starting execution loop of primary updates... ---
-        // Main Loop
+        // --- CORE GAME LOOP ---
         function gameLoop(timestamp) {
             if (!lastTime) lastTime = timestamp;
-            const dt = (timestamp - lastTime) / 1000;
+            const dt = Math.min(0.1, (timestamp - lastTime) / 1000); // Physics steps overflow control
             lastTime = timestamp;
 
             if (gameState === GAME_STATES.PLAYING) {
@@ -2208,11 +2071,9 @@
         }
 
         function updatePlayingState(dt) {
-            // Live background nebula cloud coordinates update
-            nebCloudX += dt * 8;
-            nebCloudY += dt * 4;
+            nebCloudX += dt * 5;
+            nebCloudY += dt * 2.5;
 
-            // Screen shaking decay
             if (gameShaking > 0) {
                 gameShaking -= 0.55;
                 document.getElementById('game-container').classList.add('shake');
@@ -2220,33 +2081,30 @@
                 document.getElementById('game-container').classList.remove('shake');
             }
 
-            // Player hit-flash decay
             if (player.flashTimer > 0) {
                 player.flashTimer -= dt;
             }
 
-            // Regenerate Health node processing
             if (player.upgrades.hpRegen > 0) {
                 player.health = Math.min(player.maxHealth, player.health + player.upgrades.hpRegen * dt);
             }
 
-            // Invincible Dash State Processing
             if (player.isDashing) {
                 player.dashTimer -= dt;
                 
-                // Dash displacement mapping
-                const finalDashSpeed = 11.5;
+                const finalDashSpeed = 10.5;
                 player.x += player.dashDirX * finalDashSpeed;
                 player.y += player.dashDirY * finalDashSpeed;
 
-                // Spawn cool trails particles on the run
-                particles.push(new Particle(player.x, player.y, '#06b6d4', 0.8));
+                // Throttled dash trail particle generation for mobile FPS protection
+                if (Math.random() < (isMobile ? 0.35 : 0.8)) {
+                    particles.push(new Particle(player.x, player.y, '#06b6d4', 0.8));
+                }
 
                 if (player.dashTimer <= 0) {
                     player.isDashing = false;
                 }
             } else {
-                // Regular Controls Movement processing
                 let dx = 0;
                 let dy = 0;
 
@@ -2275,7 +2133,6 @@
                 player.y += dy * speedScalar;
             }
 
-            // Passive dash charge reloading module
             if (player.dashCharges < player.dashMaxCharges) {
                 const rechargeDelay = 3.0 * (1 - (player.upgrades.dashCooldownUpgrade - 1) * 0.15);
                 player.dashCooldown += dt;
@@ -2286,13 +2143,11 @@
                 }
             }
 
-            // Smooth linear interpolation for the camera tracking
             if (canvas) {
                 camera.x += (player.x - canvas.width / 2 - camera.x) * 0.1;
                 camera.y += (player.y - canvas.height / 2 - camera.y) * 0.1;
             }
 
-            // Wave Timer limits check
             waveTimeLeft -= dt;
             if (waveTimeLeft <= 0) {
                 waveTimeLeft = 0;
@@ -2302,14 +2157,12 @@
             processEnemySpawning(dt);
             processWeaponsAndFire(dt);
 
-            // Entities update arrays loop processing
             enemies.forEach(e => e.update(dt));
             projectiles.forEach(p => p.update(dt));
             drops.forEach(d => d.update(dt));
             particles.forEach(pt => pt.update());
             floatingTexts.forEach(ft => ft.update());
 
-            // Projectile colliders verification
             projectiles.forEach(proj => {
                 if (!proj.alive) return;
 
@@ -2317,22 +2170,19 @@
                     enemies.forEach(enemy => {
                         if (!enemy.alive) return;
                         if (Math.hypot(enemy.x - proj.x, enemy.y - proj.y) < enemy.size + proj.size) {
-                            
-                            // Check for Critical Hit
                             const hasCrit = Math.random() < (0.05 + (player.upgrades.critChance - 1) * 0.05);
                             const finalDamage = hasCrit ? Math.round(proj.damage * 1.8) : Math.round(proj.damage);
                             
                             enemy.takeDamage(finalDamage);
                             proj.alive = false;
 
-                            // Homing rocket triggers smaller impact cluster explosions
                             if (proj.behavior === 'homing') {
-                                triggerBlastExplosion(proj.x, proj.y, 60, finalDamage * 0.5);
+                                triggerBlastExplosion(proj.x, proj.y, 55, finalDamage * 0.5);
                             }
                             
                             floatingTexts.push(new FloatingText(
                                 enemy.x, 
-                                enemy.y - 12, 
+                                enemy.y - 10, 
                                 `${finalDamage}`, 
                                 hasCrit ? '#f59e0b' : '#ef4444', 
                                 hasCrit
@@ -2347,7 +2197,6 @@
                 }
             });
 
-            // Enemy physical contact collision verification
             enemies.forEach(enemy => {
                 if (!enemy.alive) return;
                 if (Math.hypot(player.x - enemy.x, player.y - enemy.y) < player.radius + enemy.size) {
@@ -2355,7 +2204,6 @@
                 }
             });
 
-            // Resource collect parameters checking
             drops.forEach(drop => {
                 if (drop.type === 'gem' || drop.type === 'coin') {
                     if (Math.hypot(player.x - drop.x, player.y - drop.y) < player.radius + drop.radius) {
@@ -2374,14 +2222,12 @@
                 }
             });
 
-            // Updating active HUD components for Boss
             if (activeBoss && activeBoss.alive) {
                 const bossRatio = Math.max(0, activeBoss.health / activeBoss.maxHealth);
                 document.getElementById('boss-hp-inner').style.width = `${bossRatio * 100}%`;
                 document.getElementById('boss-pct-hud').innerText = `${Math.ceil(bossRatio * 100)}%`;
             }
 
-            // Cleanup inactive arrays instances
             enemies = enemies.filter(e => e.alive);
             projectiles = projectiles.filter(p => p.alive);
             drops = drops.filter(d => d.alive !== false && (d.timer === undefined || d.timer > 0));
@@ -2391,29 +2237,26 @@
             syncHUDMetrics();
         }
 
-        // --- STREAMING_CHUNK: Processing rendering methods on canvas... ---
         function drawPlayingState() {
             if (!ctx || !canvas) return;
             
-            // Draw Procedural dynamic live background color matching current wave
             ctx.fillStyle = activeTheme.bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Live Nebulae floating node circles across back buffer
+            // Floating background nebulae
             ctx.save();
-            const rawX = (nebCloudX) % (canvas.width + 500) - 250;
-            const rawY = (nebCloudY) % (canvas.height + 500) - 250;
-            const radialGrad = ctx.createRadialGradient(rawX, rawY, 50, rawX, rawY, 300);
+            const rawX = (nebCloudX) % (canvas.width + 400) - 200;
+            const rawY = (nebCloudY) % (canvas.height + 400) - 200;
+            const radialGrad = ctx.createRadialGradient(rawX, rawY, 40, rawX, rawY, 250);
             radialGrad.addColorStop(0, activeTheme.nebColor);
             radialGrad.addColorStop(1, 'transparent');
             ctx.fillStyle = radialGrad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.restore();
 
-            // Draw Background Star Dust Nodes (Parallax Scroll Effect with wave-specific dynamic colors)
+            // Parallax dust stars
             ctx.save();
             starDustArray.forEach(star => {
-                // Parallax wrap around rendering
                 let sx = (star.x - camera.x * star.speedFactor) % canvas.width;
                 let sy = (star.y - camera.y * star.speedFactor) % canvas.height;
                 if (sx < 0) sx += canvas.width;
@@ -2427,11 +2270,12 @@
             });
             ctx.restore();
 
-            // Draw Grid Lines representing wave-shifting live grid bounds
+            // Shift grid lines dynamically
             ctx.save();
             ctx.strokeStyle = activeTheme.gridColor;
             ctx.lineWidth = 1;
-            const gridSpacing = 60;
+            // Lower grid density on mobile to increase drawing performances
+            const gridSpacing = isMobile ? 80 : 60;
             const startX = Math.floor(camera.x / gridSpacing) * gridSpacing;
             const startY = Math.floor(camera.y / gridSpacing) * gridSpacing;
 
@@ -2449,7 +2293,6 @@
             }
             ctx.restore();
 
-            // Rendering assets order list
             drops.forEach(d => d.draw());
             enemies.forEach(e => e.draw());
             projectiles.forEach(p => p.draw());
@@ -2460,7 +2303,6 @@
             floatingTexts.forEach(ft => ft.draw());
         }
 
-        // --- STREAMING_CHUNK: Level Ups & HUD displays sync... ---
         function triggerPlayerLevelUp() {
             player.level++;
             player.xp -= player.xpNeeded;
@@ -2487,18 +2329,16 @@
             document.getElementById('hud-wave-label').innerText = `WAVE ${wave}`;
             document.getElementById('hud-gold').innerText = player.gold;
             document.getElementById('hud-kills').innerText = player.kills;
-            document.getElementById('hud-score').innerText = player.score;
         }
 
-        // Dashboard Dash Charge Synchronizer UI
         function syncHUDDashUI() {
             const slotsContainer = document.getElementById('hud-dash-slots');
             slotsContainer.innerHTML = '';
             for (let i = 0; i < player.dashMaxCharges; i++) {
                 const slot = document.createElement('div');
-                slot.className = `w-3.5 h-3.5 rounded-full border transition-all ${
+                slot.className = `w-3 h-3 rounded-full border transition-all ${
                     i < player.dashCharges 
-                    ? 'bg-cyan-400 border-cyan-300 shadow-[0_0_6px_#22d3ee]' 
+                    ? 'bg-cyan-400 border-cyan-300 shadow-[0_0_5px_#22d3ee]' 
                     : 'bg-slate-900 border-slate-700'
                 }`;
                 slotsContainer.appendChild(slot);
@@ -2547,7 +2387,6 @@
             document.getElementById('gameover-screen').classList.remove('hidden');
         }
 
-        // Custom Safe Confirmation overlay handlers (No browser native prompt used)
         let confirmAction = null;
         function showConfirmModal(callback) {
             confirmAction = callback;
@@ -2594,7 +2433,6 @@
                 fireRate: 1,
                 rangeLimit: 1,
                 magnetRadius: 1,
-                luckMultiplier: 1,
                 dashCooldownUpgrade: 1,
                 critChance: 1
             };
@@ -2624,7 +2462,6 @@
             saveGameStateToStorage();
         }
 
-        // --- STREAMING_CHUNK: Setup Mount buttons & dynamic resize events... ---
         window.onload = function() {
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
@@ -2640,8 +2477,8 @@
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
 
-            // Setup joystick mapping on touchscreen
-            if ('ontouchstart' in window) {
+            // Auto show touch overlays on mobile viewport devices
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
                 touchDashBtn.classList.remove('hidden');
             }
 
@@ -2680,7 +2517,7 @@
                 AudioSynth.startAmbientSynthLoop();
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('hud').classList.remove('hidden');
-                if ('ontouchstart' in window) {
+                if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
                     touchDashBtn.classList.remove('hidden');
                 }
                 resetSurvivorCoreState();
@@ -2697,16 +2534,14 @@
             document.getElementById('btn-next-wave').addEventListener('click', () => {
                 document.getElementById('shop-screen').classList.add('hidden');
                 document.getElementById('hud').classList.remove('hidden');
-                if ('ontouchstart' in window) {
+                if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
                     touchDashBtn.classList.remove('hidden');
                 }
                 
                 wave++;
                 waveTimeLeft = 60.0;
                 
-                // Switch dynamic live background for the new wave
                 updateBackgroundThemeForWave();
-
                 saveGameStateToStorage();
                 gameState = GAME_STATES.PLAYING;
             });
@@ -2714,7 +2549,7 @@
             document.getElementById('btn-restart').addEventListener('click', () => {
                 document.getElementById('gameover-screen').classList.add('hidden');
                 document.getElementById('hud').classList.remove('hidden');
-                if ('ontouchstart' in window) {
+                if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
                     touchDashBtn.classList.remove('hidden');
                 }
                 
